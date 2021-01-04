@@ -1,0 +1,4 @@
+{
+  "Name": "OPC-N3",
+  "Port": "/dev/ttyACM0"
+}
