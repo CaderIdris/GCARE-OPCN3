@@ -1,7 +1,9 @@
 """ Simple one file Python module that interfaces with Alphasense
 OPC-N3 devices connected to a linux machine as a serial device
 
-
+Adapted from Python2 code written by Daniel Jarvis and
+licensed under GPL v3.0:
+https://github.com/JarvisSan22/OPC-N3_python
 """
 
 __author__ = "Joe Hayward"
@@ -13,351 +15,322 @@ __maintainer__ = "Joe Hayward"
 __email__ = "j.d.hayward@surrey.ac.uk"
 __status__ = "Production"
 
-import serial
 import datetime
 import json
 import time
+from dataclasses import dataclass
 
-wait = 1e-06
+import serial
+
+
 
 def fancy_print(str_to_print, length=60, form='NORM', char='#'):
+    """ Makes strings output to the console look nicer
+
+    This function is used to make the console output of python
+    scripts look nicer. This function is used in a range of
+    modules to save time in formatting console output.
+
+        Keyword arguments:
+            str_to_print (str): The string to be formatted and printed
+
+            length (int): Total length of formatted string
+
+            form (str): String indicating how 'str_to_print' will be
+            formatted. The options are:
+                'TITLE': Centers 'str_to_print' and puts one char at
+                         each end
+                'NORM': Left justifies 'str_to_print' and puts one char
+                        at each end (Norm doesn't have to be specified,
+                        any option not listed here has the same result)
+                'LINE': Prints a line of 'char's 'length' long
+
+            char (str): The character to print.
+
+        Variables:
+            length_slope (float): Slope used to adjust length of line.
+            Used if an emoji is used for 'char' as they take up twice
+            as much space. If one is detected, the length is adjusted.
+
+            length_offset (int): Offset used to adjust length of line.
+            Used if an emoji is used for 'char' as they take up twice
+            as much space. If one is detected, the length is adjusted.
+
+        Returns:
+            Nothing, prints a 'form' formatted 'str_to_print' of
+            length 'length'
+    """
+    length_adjust = 1
+    length_offset = 0
+    if len(char) > 1:
+        char = char[0]
+    if len(char.encode('utf-8')) > 1:
+        length_adjust = 0.5
+        length_offset = 1
     if form == 'TITLE':
         print(f"{char} {str_to_print.center(length - 4, ' ')} {char}")
     elif form == 'LINE':
-        print(char*((length+2)//2))
+        print(char*int(((length) * length_adjust) + length_offset))
     else:
         print(f"{char} {str_to_print.ljust(length - 4, ' ')} {char}")
 
-# TODO: Change this mess of functions in to a class
-def init_OPC(ser):
-    """ Initialises the OPC
+def convertRH(rawRH):
+    """ Converts raw RH output of OPCN3 to a real value.
 
-    Communicates with the OPC via serial.
+    The equation used is quoted in Alphasense Document 072-0503:
+    Supplemental SPI information for the OPC-N3 (Issue 3).
 
     Keyword Arguments:
-        ser (Serial Device): Object representing the OPC
+        rawRH (int): Combination of LSB 58 and MSB 59
 
-    Adapted from code by Daniel Jarvis (ee18dj@leeds.ac.uk), which was
-    licensed under GNU General Public License v3.0
+    Returns:
+        Converted real RH value
+
+    Adapted from Python2 code written by Daniel Jarvis and
+    licensed under GPL v3.0:
     https://github.com/JarvisSan22/OPC-N3_python
     """
+    return 100 * (rawRH / (2 ** (16 - 1)))
+
+def convertT(rawT):
+    """ Converts raw T output of OPCN3 to a real value.
+
+    The equation used is quoted in Alphasense Document 072-0503:
+    Supplemental SPI information for the OPC-N3 (Issue 3).
+
+    Keyword Arguments:
+        rawT (int): Combination of LSB 56 and MSB 57
+
+    Returns:
+        Converted real RH value
+
+    Adapted from Python2 code written by Daniel Jarvis and
+    licensed under GPL v3.0:
+    https://github.com/JarvisSan22/OPC-N3_python
+    """
+    return -45 + (175 * (rawT / (2 ** (16 - 1))))
+
+def byteCombine(LSB, MSB):
+    """ Combines Least Significant Byte and Most Significant Byte in to
+    a 16 bit integer.
+
+    Keyword Arguments:
+        LSB (int): Least Significant byte
+        MSB (int): Most Significant byte
+
+    Returns:
+        16 bit integer representing a combination of LSB and MSB
+
+    Adapted from Python2 code written by Daniel Jarvis and
+    licensed under GPL v3.0:
+    https://github.com/JarvisSan22/OPC-N3_python
+    """
+    return (MSB << 8) | LSB
+
+@dataclass
+class SPIBytes:
+    """ Dataclass containing bytes used to communicate with
+    OPC-N3
+
+    All bytecodes are taken from Alphasense Document 072-0503:
+    Supplemental SPI information for the OPC-N3 (Issue 3).
+
+        Attributes:
+            adUSBAdapter (int): Address for the USB Adapter used with
+                                the OPC-N3
+
+            adOPC (int): Address for the OPC-N3
+
+            pCommand (int): The command byte used to control OPC-N3
+                            peripherals (the fan and laser)
+
+            fanOff (int): The byte that follows 'pCommand' to disable
+                          the fan
+
+            fanOn (int): The byte that follows 'pCommand' to enable
+                         the fan
+
+            laserOff (int): The byte that follows 'pCommand' to disable
+                            the laser
+
+            laserOn (int): The byte that follows 'pCommand' to enable
+                           the laser
+
+            reqHist (int): The command byte used to request histogram
+                           data
+
+            reqData (int): The command byte used to request PM data.
+                           This also resets the histogram.
+    """
+    adUSBAdapter: int = 0x5A  # Address the USB Adapter
+    adOPC: int = 0x61  # Address the OPC
+    pCommand: int = 0x03  # Command byte for peripherals (Fan/Laser)
+    fanOff: int = 0x02
+    fanOn: int = 0x03
+    laserOff: int = 0x06
+    laserOn: int = 0x07
+    reqHist: int = 0x30
+    reqData: int = 0x32
+
+class OPC:
+    """ Class that represents the connected OPC-N3
+
+    Attributes:
+        opc (serial object): The serial connection to the OPC-N3
+
+        wait (float): The standard time to wait between messages
+
+        isFanOn (boolean): True if fan should be on, false if not
+
+        isLaserOn (boolean): True if laser should be on, false if not
+
+    Methods:
+        fanPower: Changes whether fan is on or off
+
+        laserPower: Changes whether laser is on or off
+
+
+    """
+    def __init__(self, ser_conf):
+        """ Initialises the class and initialises connection with OPC
+
+            Keyword Arguments:
+                ser_conf (dict): Contains all necessary information for
+                                 pySerial3 to make a connection
+
+            Adapted from Python2 code written by Daniel Jarvis and
+            licensed under GPL v3.0:
+            https://github.com/JarvisSan22/OPC-N3_python
+        """
+        self.opc = serial.Serial(**ser_conf)
+        self.wait = 1e-06
+        self.isFanOn = True
+        self.isLaserOn = True
+
+        # INITIALISE SPI CONNECTION
         time.sleep(1)
-        ser.write(bytearray([0x5A,0x01]))
-        byte_output = ser.read(3)
-        print(byte_output)
-        time.sleep(wait)
-        ser.write(bytearray([0x5A,0x03]))
-        byte_output = ser.read(9)
-        print(byte_output)
-        time.sleep(wait)
+        self.opc.write(bytearray([SPIBytes.adUSBAdapter,0x01]))
+        self.opc.read(3)
+        time.sleep(self.wait)
+        self.opc.write(bytearray([SPIBytes.adUSBAdapter,0x03]))
+        self.opc.read(9)
+        time.sleep(self.wait)
+        self.opc.write(bytearray([SPIBytes.adUSBAdapter,0x02,0x92,0x07]))
+        self.opc.read(2)
+        time.sleep(self.wait)
 
-		 #SPI connection
-        ser.write(bytearray([0x5A,0x02,0x92,0x07]))
-        byte_output = ser.read(2)
-        print(byte_output)
-        time.sleep(wait)
+    def fanPower(self, status):
+        """ Toggles OPC-N3 fan power status
 
+            Keyword Arguments:
+                status (boolean): True if fan is to be turned on, false
+                                  if not
 
-def fan_Off(ser):
-        print("Fan turn off")
+            Variables:
+                loopCount (int): How many attempts have been made. If
+                                 > 20, the SPI buffer is reset and
+                                 loopCount is reset to 0
 
-         #start the flow chart the flow chart
-        T=0 #Triese counter
+                fanStatus (int): The byte sent to the OPC to change
+                                 the power status of the fan.
+                                 fanOn is used to turn it on.
+                                 fanOff is used to turn it off.
+
+                opcReturn (int): Bytes returned by OPC to indicate
+                                 whether it's ready to receive
+                                 peripheral command or not
+
+            Returns:
+                Nothing, toggles the fan
+
+            Adapted from Python2 code written by Daniel Jarvis and
+            licensed under GPL v3.0:
+            https://github.com/JarvisSan22/OPC-N3_python
+        """
+        loopCount = 0
+        if status:  # True if fan is on, false if not
+            fanStatus = SPIBytes.fanOn
+        else:
+            fanStatus = SPIBytes.fanOff
         while True:
-
-            ser.write(bytearray([0x61,0x03]))
-            nl = ser.read(2)
-           # print(nl)
-            T=T+1
-            if nl== (b"\xff\xf3" or b"xf3\xff"):
-                time.sleep(wait)
-                #fan off
-                ser.write(bytearray([0x61,0x02]))
-                nl = ser.read(2)
-          #      print(nl)
+            loopCount += 1
+            self.opc.write(bytearray([SPIBytes.adOPC,SPIBytes.pCommand]))  # 0x03 is command byte
+            opcReturn = self.opc.read(2)
+            if opcReturn == (b"\xff\xf3" or b"xf3\xff"):
+                time.sleep(self.wait)
+                self.opc.write(bytearray([SPIBytes.adOPC, fanStatus]))
+                self.opc.read(2)
                 time.sleep(2)
-                fan="OFF"
-                print("Fan off")
-                return fan
-            elif T > 20:
-
-                print("Reset SPI")
-                time.sleep(3) #time for spi buffer to reset
-                #reset SPI  conncetion
-                #initOPC(ser)
-                T=0
+                self.isFanOn = status
+                break
+            elif loopCount > 20:
+                time.sleep(3)
+                loopCount = 0
             else:
-                time.sleep(wait*10) #wait 1e-05 before next commnad
+                time.sleep(self.wait * 10)
+
+    def laserPower(self, status):
+        """ Toggles OPC-N3 laser power status
+
+            Keyword Arguments:
+                status (boolean): True if laser is to be turned on, false
+                                  if not
+
+            Variables:
+                loopCount (int): How many attempts have been made. If
+                                 > 20, the SPI buffer is reset and
+                                 loopCount is reset to 0
+
+                laserStatus (int): The byte sent to the OPC to change
+                                   the power status of the laser.
+                                   laserOn is used to turn it on.
+                                   laserOff is used to turn it off.
+
+                opcReturn (int): Bytes returned by OPC to indicate
+                                 whether it's ready to receive
+                                 peripheral command or not
+
+            Returns:
+                Nothing, toggles the laser
+
+            Adapted from Python2 code written by Daniel Jarvis and
+            licensed under GPL v3.0:
+            https://github.com/JarvisSan22/OPC-N3_python
+        """
+        loopCount = 0
+        if status:  # True if fan is on, false if not
+            laserStatus = SPIBytes.laserOn
+        else:
+            laserStatus = SPIBytes.laserOff
+        while True:
+            loopCount += 1
+            self.opc.write(bytearray([SPIBytes.adOPC,SPIBytes.pCommand]))  # 0x03 is command byte
+            opcReturn = self.opc.read(2)
+            if opcReturn == (b"\xff\xf3" or b"xf3\xff"):
+                time.sleep(self.wait)
+                self.opc.write(bytearray([SPIBytes.adOPC, laserStatus]))
+                self.opc.read(2)
+                time.sleep(2)
+                self.isLaserOn = status
+                break
+            elif loopCount > 20:
+                time.sleep(3)
+                loopCount = 0
+            else:
+                time.sleep(self.wait * 10)
 
 
-def fan_On(self,ser):
-	print("Fan turn on")
-	#start the flow chart the flow chart
-	T=0 #Triese counter
-	while True:
-	    ser.write(bytearray([0x61,0x03]))
-	    nl = ser.read(2)
-	 #   print(nl)
-	    T=T+1
-	    if nl== (b"\xff\xf3" or b"xf3\xff"):
-		time.sleep(wait)
-		#fan on
-		ser.write(bytearray([0x61,0x03]))
-		nl = ser.read(2)
-	#        print(nl)
-		time.sleep(2)
-		fan="ON"
-		print("Fan On")
-		return fan
-	    elif T > 20:
-		print("Reset SPI")
-		time.sleep(3) #time for spi buffer to reset
-		#reset SPI  conncetion
-		self.initOPC(ser)
-		T=0
-	    else:
-		time.sleep(wait*10) #wait 1e-05 before next commnad
 
 
-def LazOn(self,ser):
-	print("Lazer turn On")
-	T=0 #Triese counter
-	while True:
-	    ser.write(bytearray([0x61,0x03]))
-	    nl = ser.read(2)
-       #     print(nl)
-
-	    T=T+1
-	    if nl== (b"\xff\xf3" or b"xf3\xff"):
-		time.sleep(wait)
-		#Lazer on
-		ser.write(bytearray([0x61,0x07]))
-		nl = ser.read(2)
-      #          print(nl)
-		time.sleep(wait)
-		Laz="ON"
-		print("Fan On")
-		return Laz
-	    elif T > 20:
-		print("Reset SPI")
-		time.sleep(3) #time for spi buffer to reset
-		#reset SPI  conncetion
-		self.initOPC(ser)
-		T=0
-	    else:
-		time.sleep(wait*10) #wait 1e-05 before next commnad
 
 
-def LazOff(self,ser):
-	print("Lazer Off")
-
-	T=0 #Triese counter
-	while True:
-	    ser.write(bytearray([0x61,0x03]))
-	    nl = ser.read(2)
-     #       print(nl)
-	    T=T+1
-	    if nl== (b"\xff\xf3" or b"xf3\xff"):
-		time.sleep(wait)
-		#Lazer off
-		ser.write(bytearray([0x61,0x06]))
-		nl = ser.read(2)
-    #            print(nl)
-		time.sleep(wait)
-		Laz="Off"
-		print("Lazer Off")
-		return Laz
-	    elif T > 20:
-		print("Reset SPI")
-		time.sleep(3) #time for spi buffer to reset
-		#reset SPI  conncetion
-		self.initOPC(ser)
-		T=0
-	    else:
-		time.sleep(wait*10) #wait 1e-05 before next commnad
-
-
-def RHcon(self,ans):
-    #ans is  combine_bytes(ans[52],ans[53])
-    RH=100*(ans/(2**16-1))
-    return RH
-
-def Tempcon(self,ans):
-      #ans is  combine_bytes(ans[52],ans[53])
-    Temp=-45+175*(ans/(2**16-1))
-    return Temp
-
-def combine_bytes(self,LSB, MSB):
-	return (MSB << 8) | LSB
-    
-def Histdata(self,ans):
-#function for all the hist data, to break up the getHist
-     #time.sleep(wait)
-
-    data={}
-    data['Bin 0'] = self.combine_bytes(ans[0],ans[1])
-    data['Bin 1'] = self.combine_bytes(ans[2],ans[3])
-    data['Bin 2'] = self.combine_bytes(ans[4],ans[5])
-    data['Bin 3'] = self.combine_bytes(ans[6],ans[7])
-    data['Bin 4'] = self.combine_bytes(ans[8],ans[9])
-    data['Bin 5'] = self.combine_bytes(ans[10],ans[11])
-    data['Bin 6'] = self.combine_bytes(ans[12],ans[13])
-    data['Bin 7'] = self.combine_bytes(ans[14],ans[15])
-    data['Bin 8'] = self.combine_bytes(ans[16],ans[17])
-    data['Bin 9'] = self.combine_bytes(ans[18],ans[19])
-    data['Bin 10'] = self.combine_bytes(ans[20],ans[21])
-    data['Bin 11'] = self.combine_bytes(ans[22],ans[23])
-    data['Bin 12'] = self.combine_bytes(ans[24],ans[25])
-    data['Bin 13'] = self.combine_bytes(ans[26],ans[27])
-    data['Bin 14'] = self.combine_bytes(ans[28],ans[29])
-    data['Bin 15'] = self.combine_bytes(ans[30],ans[31])
-    data['Bin 16'] = self.combine_bytes(ans[32],ans[33])
-    data['Bin 17'] = self.combine_bytes(ans[34],ans[35])
-    data['Bin 18'] = self.combine_bytes(ans[36],ans[37])
-    data['Bin 19'] = self.combine_bytes(ans[38],ans[39])
-    data['Bin 20'] = self.combine_bytes(ans[40],ans[41])
-    data['Bin 21'] = self.combine_bytes(ans[42],ans[43])
-    data['Bin 22'] = self.combine_bytes(ans[44],ans[45])
-    data['Bin 23'] = self.combine_bytes(ans[46],ans[47])
-    data['MToF'] = struct.unpack('f',bytes(ans[48:52]))[0] #MTof is in 1/3 us, value of 10=3.33us
-    data['period'] = self.combine_bytes(ans[52],ans[53])
-    data['FlowRate'] = self.combine_bytes(ans[54],ans[55])
-    data['OPC-T']=self.Tempcon(self.combine_bytes(ans[56],ans[57]))
-    data['OPC-RH'] = self.RHcon(self.combine_bytes(ans[58],ans[59]))
-    data['pm1'] = struct.unpack('f',bytes(ans[60:64]))[0]
-    data['pm2.5'] = struct.unpack('f',bytes(ans[64:68]))[0]
-    data['pm10'] = struct.unpack('f',bytes(ans[68:72]))[0]
-    data['Check']= self.combine_bytes(ans[84],ans[85])
-
-      #  print(data)
-    return(data)
-
-def read_all(self,port, chunk_size=86):
-    """Read all characters on the serial port and return them."""
-    if not port.timeout:
-	raise TypeError('Port needs to have a timeout set!')
-
-    read_buffer = b''
-
-    while True:
-	# Read in chunks. Each chunk will wait as long as specified by
-	# timeout. Increase chunk_size to fail quicker
-	byte_chunk = port.read(size=chunk_size)
-	read_buffer += byte_chunk
-	if not len(byte_chunk) == chunk_size:
-	    break
-
-    return read_buffer
-
-def initFile(self,date):
-	ofile=   FOLDER + LOCATION + '_' + OPCNAME + '_' + str(date).replace('-','') + ".csv"
-	print("Opening Output File:")
-	if(not os.path.isfile(ofile)):
-		f=open(ofile,'w+')
-		print("time,b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11,b12,b13,b14,b15,b16,b17,b18,b19,b20,b21,b22,b23,MToF,period,FlowRate,OPC-T,OPC-RH,pm1,pm2.5,pm10","Check",file=f)
-	else:
-		f=open(ofile,'a')
-	return f
-
-
-def rightbytes(self,response):
-    '''
-    Get ride of the 0x61 byeste responce from the hist data, returning just the wanted data
-    '''
-    hist_response=[]
-    for j, k in enumerate(response):            # Each of the 86 bytes we expect to be returned is prefixed by 0xFF.
-	if ((j + 1) % 2) == 0:                  # Throw away 0th, 2nd, 4th, 6th bytes, etc.
-	    hist_response.append(k)
-    return hist_response
-def getData(self,ser):
-	print("Get PM data")
-	T=0
-
-	while True:
-	    #initsiate getData commnad
-	    ser.write([0x61,0x32])
-	    nl=ser.read(2)
-	  #  time.sleep(1e-05)
-	    T=T+1
-	    print(nl)
-	    if nl== (b'\xff\xf3' or b'\xf3\xff' ):
-		#write to the OPC
-		for i in range(14):        # Send the whole stream of bytes at once.
-		    ser.write([0x61, 0x01])
-		    time.sleep(0.00001)
-		#time.sleep(.1)
-		#read the data
-		ans=bytearray(ser.readall())
-	       # print("ans=",ans)
-		ans=self.rightbytes(ans)
-	       # print("ans=",ans)
-		b1 = ans[0:4]
-		b2 = ans[4:8]
-		b3 = ans[8:12]
-		c1=struct.unpack('f',bytes(b1))[0]
-		c2=struct.unpack('f',bytes(b2))[0]
-		c3=struct.unpack('f',bytes(b3))[0]
-		check=self.combine_bytes(ans[12],ans[13])
-		print("Check=",check)
-		return([c1,c2,c3])
-	    elif T > 20:
-		print("Reset SPI")
-		time.sleep(3) #time for spi buffer to reset
-		#reset SPI  conncetion
-		self.initOPC(ser)
-		T=0
-		return
-	    else:
-		time.sleep(wait*10) #wait 1e-05 before next commnad
-
-def getHist(self,ser):
-
-	#OPC N2 method
-	T=0 #attemt varaible
-	while True:
-	#    print("get hist attempt ",T)
-
-	    #reques the hist data set
-	    ser.write([0x61,0x30])
-	   # time.sleep(wait*10)
-	    nl = ser.read(2)
-	  #  print(nl)
-	    T=T+1
-	  #  print("Reading Hist data")
-	 #  # print(nl)
-	    if nl== (b'\xff\xf3' or b'\xf3\xff' ):
-		for i in range(86):        # Send bytes one at a time
-			ser.write([0x61, 0x01])
-			time.sleep(0.000001)
-
-	       # ans=bytearray(ser.read(1))
-	    #    print("ans=",ans,"len",len(ans))
-		time.sleep(wait) #delay
-		ans=bytearray(ser.readall())
-	   #     print("ans=",ans,"len",len(ans))
-		ans=self.rightbytes(ans) #get the wanted data bytes
-	       # ans=bytearray(test)
-	    #    print("ans=",ans,"len",len(ans))
-		#print("test=",test,'len',len(test))
-		data=self.Histdata(ans)
-		return data
-	    if T > 20:
-	     #   print("Reset SPI")
-		time.sleep(wait) #time for spi buffer to reset
-		#reset SPI  conncetion
-		self.initOPC(ser)
-		print("ERROR")
-		data="ERROR"
-		return data
-	    else:
-		time.sleep(wait*10) #wait 1e-05 before next commn
 
 
 
 
 if __name__ == "__main__":
     ### PROGRAM INIT
-    FANCY_PRINT_CHARACTER = '\U0001F60E'
+    FANCY_PRINT_CHARACTER = '\U0001F533'
     fancy_print('', form='LINE', char=FANCY_PRINT_CHARACTER)
     fancy_print('GCARE OPC-N3 Python Script', form='TITLE',
                 char=FANCY_PRINT_CHARACTER)
@@ -381,7 +354,21 @@ if __name__ == "__main__":
         "xonxoff": False,
         "timeout": 1
     }
-    time.sleep(2)  # The OPC needs to boot
 
     ### Initialise the OPC
-    opc = serial.Serial(**serial_config)
+    time.sleep(2)  # The OPC needs to boot
+    opc = OPC(serial_config)
+    fancy_print(f'- Connection Made', char=FANCY_PRINT_CHARACTER)
+    fancy_print('', form='LINE', char=FANCY_PRINT_CHARACTER)
+
+    ### Test the connection
+    fancy_print(f'- Testing Connection', char=FANCY_PRINT_CHARACTER)
+    fancy_print(f'-- Disabling Fan', char=FANCY_PRINT_CHARACTER)
+    opc.fanPower(False)
+    fancy_print(f'-- Enabling Fan', char=FANCY_PRINT_CHARACTER)
+    opc.fanPower(True)
+    fancy_print(f'-- Disabling Laser', char=FANCY_PRINT_CHARACTER)
+    opc.laserPower(False)
+    fancy_print(f'-- Enabling Laser', char=FANCY_PRINT_CHARACTER)
+    opc.laserPower(True)
+    fancy_print('', form='LINE', char=FANCY_PRINT_CHARACTER)
