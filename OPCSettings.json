@@ -1,4 +1,6 @@
 {
   "Name": "OPC-N3",
-  "Port": "/dev/ttyACM0"
+  "Port": "/dev/ttyACM0",
+  "Use Bin Data": false,
+  "Fan Speed": 128
 }
