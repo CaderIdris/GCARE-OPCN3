@@ -1,7 +1,41 @@
-""" Module containing classes necessary to communicate with OPC-N3 via
-USB-SPI connection
+""" Module used to communicate with Alphasense OPC-N3 via USB-SPI
+connection
 
+This module contains classes and functions used to communicate with an
+Alphasense OPC-N3 via USB-SPI connection, modify peripheral functions,
+record data and format it so it can be saved to a csv file
+
+    Classes:
+        SPIBytes: Dataclass containing bytecodes that command the OPC
+                  to perform various functions
+
+        OPCN3: Represents an OPC-N3 connected via USB-SPI
+
+    Functions:
+        convert_RH: Converts raw RH output of OPCN3 to a real value
+
+        convert_T: Converts raw T output of OPCN3 to a real value
+
+        combine_bytes: Combines Least Significant Byte and Most
+                       Significant Byte in to a 16 bit integer.
+
+Some code in this module was adapted from Python 2 code written by
+Daniel Jarvis and licensed under GPL v3.0.:
+https://github.com/JarvisSan22/OPC-N3_python
+
+Functions adapted from this code is marked in the docstrings.
 """
+
+__author__ = "Joe Hayward"
+__copyright__ = "2020, Global Centre for Clean Air Research, "\
+                "The University of Surrey"
+__credits__ = ["Joe Hayward"]
+__license__ = "GNU General Public License v3.0"
+__version__ = "2021.1.12.1822"
+__maintainer__ = "Joe Hayward"
+__email__ = "j.d.hayward@surrey.ac.uk"
+__status__ = "Alpha"
+
 from dataclasses import dataclass
 from struct import unpack
 import time
@@ -10,8 +44,8 @@ import serial
 
 @dataclass
 class SPIBytes:
-    """ Dataclass containing bytes used to communicate with
-    OPC-N3
+    """ Dataclass containing bytecodes that command the OPC to perform
+    various functions
 
     All bytecodes are taken from Alphasense Document 072-0503:
     Supplemental SPI information for the OPC-N3 (Issue 3).
@@ -58,7 +92,7 @@ class SPIBytes:
 
 
 class OPCN3:
-    """ Class that represents the connected OPC-N3
+    """ Represents an OPC-N3 connected via USB-SPI
 
     Attributes:
         opc (serial object): The serial connection to the OPC-N3
@@ -74,7 +108,7 @@ class OPCN3:
 
         latestData (dict): Data output by OPC-N3, parsed by script.
                            Defaults to None if OPC does not send
-                           data or data is not in expected format.
+                           data or data is not in expected format
 
     Methods:
         initConnection: Initalises connection with the OPC-N3
@@ -87,7 +121,11 @@ class OPCN3:
                  resets the histogram after data is returned. The
                  data is then parsed and saved to latestData
 
+        formatData: Formats data saved to latestData instance in to a
+                    format suitable for writing to a csv file
 
+        printOutput: Returns data stored in latestData in a format to
+                     be printed
     """
     def __init__(self, serialConfig, deviceConfig):
         """ Initialises the class
@@ -328,10 +366,107 @@ class OPCN3:
                 else:
                     time.sleep(self.wait * 10)
 
+    def formatData(self):
+        """ Formats data saved to latestData instance in to a format
+        suitable for writing to a csv file.
+
+        Formats headers and data in to formats suitable for writing to
+        a csv file. Stores them in a dictionary file which splits up
+        the measurement headers, data, bin headers and bin data. If
+        no bin data is measured, the bin headers and bin data are
+        saves as None values.
+
+            Parameters:
+                binKeys (list): Keys representing the different
+                                particle size bins
+
+                binHeaders (str): Headers for the bin data, suitable
+                                  for a csv file
+
+                binFormatted (str): Bin data, suitable for a csv file
+
+                dataKeys (list): Keys representing all other
+                                 measurements made by OPC
+
+                dataHeaders (str): Headers for other measurements,
+                                   suitable for a csv file
+
+                dataFormatted (str): Other measurements, suitable for
+                                     a csv file
+
+            Returns:
+                Dictionary with 4 keys {
+                    "Headers": Headers for non bin measurements,
+                    "Data": Non bin measurements,
+                    "Bin Headers": Headers for bin measurements,
+                    "Bin Data": Bin measurements
+                }
+                If no measurements are made, all are None
+                If only non bin measurements are made, "Bin Headers"
+                and "Bin Data" are None
+        """
+        if self.latestData is None:
+            return {"Headers": None, "Data": None,
+                    "Bin Headers": None, "Bin Data": None}
+        if self.config["Use Bin Data"]:
+            binKeys = list(self.latestData["Bin Data"].keys())
+            binHeaders = ""
+            binFormatted = ""
+            for bIndex, binKey in enumerate(binKeys):
+                if bIndex == 0:
+                    binHeaders = f"{binKey}"  # f string to avoid
+                                                 # unforseen behaviour
+                    binFormatted= f"{self.latestData['Bin Data'][binKey]}"
+                else:
+                    binHeaders = f"{binHeaders}, {binKey}"
+                    binFormatted= f"{binFormatted}," \
+                        f"{self.latestData['Bin Data'][binKey]}"
+            self.latestData.pop("Bin Data", None)
+        dataKeys = list(self.latestData.keys())
+        dataHeaders = ""
+        dataFormatted = ""
+        for dataIndex, dataKey in enumerate(dataKeys):
+            if dataIndex == 0:
+                dataHeaders = f"{dataKey}"
+                dataFormatted = f"{self.latestData[dataKey]}"
+            else:
+                dataHeaders = f"{dataHeaders}, {dataKey}"
+                dataFormatted = f"{dataFormatted}, {self.latestData[dataKey]}"
+        if self.config["Use Bin Data"]:
+            return {"Headers": dataHeaders, "Data": dataFormatted,
+                    "Bin Headers": binHeaders, "Bin Data": binFormatted}
+        else:
+            return {"Headers": dataHeaders, "Data": dataFormatted,
+                    "Bin Headers": None, "Bin Data": None}
+
+    def PrintOutput(self):
+        """ Returns data stored in latestData in a format to be printed
+
+            Keyword Arguments:
+                None
+
+            Returns:
+                If latestData contains measurements, returns a
+                formatted string to be printed to the console. If
+                latestData doesn't, a string of hashes is returned
+                instead
+        """
+        if self.latestData is not None:
+            return f"PM1: {str(self.latestData['PM1 (ug/m-3)']).ljust(7)}| " \
+                f"PM2.5: {str(self.latestData['PM2.5 (ug/m-3)']).ljust(7)}| " \
+                f"PM10: {str(self.latestData['PM10 (ug/m-3)']).ljust(7)}| " \
+                f"RH: {str(self.latestData['RH (%)']).ljust(7)}| " \
+                f"Temp: {str(self.latestData['Temp (C)']).ljust(7)}| " \
+                f"Flow: {str(self.latestData['Flowrate (ml/s)']).ljust(7)}| " \
+                f"Per: {str(self.latestData['Period (s)']).ljust(7)}"
+        else:
+            return "#" * 100
+
+
 
 
 def convert_RH(rawRH):
-    """ Converts raw RH output of OPCN3 to a real value.
+    """ Converts raw RH output of OPCN3 to a real value
 
     The equation used is quoted in Alphasense Document 072-0503:
     Supplemental SPI information for the OPC-N3 (Issue 3).
