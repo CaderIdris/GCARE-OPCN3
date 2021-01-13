@@ -37,6 +37,9 @@ filepath. If this file doesn't exist, it is made.
         opc (OPC-N3 Class): Class object representing an instance of
                             the OPC-N3
 
+        firstMeasurementTime (datetime): When the first measurement
+                                         will take place
+
         startTime (float): When the measurement starts, expressed in
                            seconds since epoch and calculated with
                            time.time()
@@ -59,7 +62,7 @@ __copyright__ = "2020, Global Centre for Clean Air Research, "\
                 "The University of Surrey"
 __credits__ = ["Joe Hayward"]
 __license__ = "GNU General Public License v3.0"
-__version__ = "2021.1.12.1822"
+__version__ = "2021.1.13.2331"
 __maintainer__ = "Joe Hayward"
 __email__ = "j.d.hayward@surrey.ac.uk"
 __status__ = "Alpha"
@@ -69,6 +72,7 @@ import json
 import time
 import os
 import getpass
+import warnings
 
 import serial
 
@@ -190,6 +194,103 @@ def find_valid_path():
             char=fancyPrintCharacter)
 
     return os.path.expanduser("~/Documents/OPC Data/")
+
+
+def first_measurement_time(timeInterval, currentTime):
+    """ Works out when the first measurement should take place
+
+    The first measurement is synced up so measurements will always
+    fall on the start of every hour and increase in intervals set in
+    OPCSettings.json. This function ensures the first measurement is
+    made at the interval closest to when the program is initialised.
+
+        Keyword Arguments:
+            timeInterval (str): The interval between measurements set
+                                in OPCSettings.json. If an incorrect
+                                value is set, the program warns the
+                                user and defaults to 1m
+
+            currentTime (datetime): The time the last measurement took
+                                    place
+
+        Parameters:
+            validMinutes (list of int): The minutes that measurements
+                                        will be made on
+
+            currentMinute (int): The minute the program was initialised
+                                 on
+
+            nextMinute (int): The first minute a measurement will occur
+
+            nextMeasurement (datetime): When the first measurement will
+                                        occur
+
+        Returns:
+            nextMeasurement
+    """
+    setIntervals = {
+        '1m': 1,
+        '5m': 5,
+        '10m': 10,
+        '15m': 15,
+        '30m': 30,
+        '1h': 60
+    }
+    if timeInterval not in list(setIntervals.keys()):
+        warnings.warn("Specified time interval not expected, defaulting to" \
+                      " 1m")
+        timeInterval = '1m'
+    validMinutes = list(range(1, 61, setIntervals[timeInterval]))
+
+    currentMinute = int(currentTime.strftime("%M"))
+    nextMinute = 60
+    for index, minute in enumerate(validMinutes[1:]):
+        if minute > currentMinute > validMinutes[index - 1]:
+            nextMinute = minute
+    if nextMinute < 60:
+        nextMeasurement = currentTime.replace(minute=nextMinute, second=0,
+            microsecond=0)
+    else:
+        nextMeasurement = currentTime.replace(minute=0, second=0,
+            microsecond=0) + dt.timedelta(hour=1)
+    return nextMeasurement
+
+
+def next_measurement_time(timeInterval, currentTime):
+    """ Calculates when the next measurement is
+
+        Keyword Arguments:
+            timeInterval (str): The interval between measurements set
+                                in OPCSettings.json. If an incorrect
+                                value is set, the program warns the
+                                user and defaults to 1m
+
+            currentTime (datetime): The time the last measurement took
+                                    place
+
+        Parameters:
+            setIntervals (dict): The number of minutes between set time
+                                 intervals. This should be moved to a
+                                 json later on for easier customisation
+
+            nextTime (datetime): When the next measurement will take
+                                 place
+
+        Returns:
+            nextTime
+    """
+    setIntervals = {
+        '1m': 1,
+        '5m': 5,
+        '10m': 10,
+        '15m': 15,
+        '30m': 30,
+        '1h': 60
+    }
+    if timeInterval not in list(setIntervals.keys()):
+        timeInterval = '1m'
+    nextTime = currentTime + dt.timedelta(minutes=setIntervals[timeInterval])
+    return nextTime
 
 
 def save_to_file(opcData, timestamp, filePath):
@@ -361,21 +462,28 @@ if __name__ == "__main__":
     fancy_print(f'-- This could corrupt the file being written to',
         char=fancyPrintCharacter)
     fancy_print('', form='LINE', char=fancyPrintCharacter)
+    nextMeasurementTime = first_measurement_time(timeDifference,
+        dt.datetime.now())
+    fancy_print(f'Current time is {dt.datetime.now().strftime("%H:%M:%S")}',
+        char=fancyPrintCharacter)
+    fancy_print(f'- Next measurement will be at ' \
+                f'{nextMeasurementTime.strftime("%H:%M:%S")}',
+        char=fancyPrintCharacter)
+    fancy_print('', form='LINE', char=fancyPrintCharacter)
     print()
+    time.sleep((nextMeasurementTime - dt.datetime.now()).seconds + 1)
+    # 1 second added on otherwise it would start on the 59th second of
+    # the previous minute, the joys of timedelta calculations
     while True:
-        startTime = time.time()
-        print('Measuring data'.ljust(100), end="\r", flush=True)
+        startTime = dt.datetime.now()
+        print('Measuring data'.ljust(140), end="\r", flush=True)
         opc.getData()
-        print('Storing Data'.ljust(100), end="\r", flush=True)
+        print('Storing Data'.ljust(140), end="\r", flush=True)
         save_to_file(opc.formatData(), dt.datetime.now(),
             opcConfig["File Path"])
-        print(f'{opc.printOutput()}'.ljust(100), end="\r", flush=True)
-        time.sleep(timeDifference - (time.time() - startTime))
-
-    # TODO:
-    # Function that skips measurement if previous took longer
-    # than timeDifference.
-    # Function that changes fan speed
-    # Separate script used to change settings within specific
-    # parameters
-    #
+        nextMeasurementTime = next_measurement_time(timeDifference,
+            startTime)
+        print(f'{opc.printOutput()} | Next Measurement: ' \
+              f'{nextMeasurementTime.strftime("%H:%M:%S")}'.ljust(140),
+              end="\r", flush=True)
+        time.sleep((nextMeasurementTime - startTime).seconds)
