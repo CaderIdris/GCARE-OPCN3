@@ -352,7 +352,7 @@ class OPCN3:
                     }
                     if self.config["Use Bin Data"]:
                         opcHistData["Bin Data"] = dict()
-                        for binNumber in range(0, 24):
+                        for binNumber in range(1, 25):
                             opcHistData["Bin Data"][f"Bin {binNumber}"] = \
                                 combine_bytes(opcHistBytes[(binNumber * 2)],
                                     opcHistBytes[(binNumber * 2) + 1])
@@ -439,7 +439,7 @@ class OPCN3:
             return {"Headers": dataHeaders, "Data": dataFormatted,
                     "Bin Headers": None, "Bin Data": None}
 
-    def PrintOutput(self):
+    def printOutput(self):
         """ Returns data stored in latestData in a format to be printed
 
             Keyword Arguments:
