@@ -277,7 +277,7 @@ def next_measurement_time(timeInterval, currentTime):
                                  place
 
         Returns:
-            nextTime
+            nextTime with second and microsecond set to 0
     """
     setIntervals = {
         '1m': 1,
@@ -290,7 +290,7 @@ def next_measurement_time(timeInterval, currentTime):
     if timeInterval not in list(setIntervals.keys()):
         timeInterval = '1m'
     nextTime = currentTime + dt.timedelta(minutes=setIntervals[timeInterval])
-    return nextTime
+    return nextTime.replace(second=0, microsecond=0)
 
 
 def save_to_file(opcData, timestamp, filePath):
