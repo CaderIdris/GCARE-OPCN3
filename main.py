@@ -62,7 +62,7 @@ __copyright__ = "2020, Global Centre for Clean Air Research, "\
                 "The University of Surrey"
 __credits__ = ["Joe Hayward"]
 __license__ = "GNU General Public License v3.0"
-__version__ = "2021.1.13.2331"
+__version__ = "2021.1.14.1318"
 __maintainer__ = "Joe Hayward"
 __email__ = "j.d.hayward@surrey.ac.uk"
 __status__ = "Alpha"
@@ -486,4 +486,9 @@ if __name__ == "__main__":
         print(f'{opc.printOutput()} | Next Measurement: ' \
               f'{nextMeasurementTime.strftime("%H:%M:%S")}'.ljust(140),
               end="\r", flush=True)
-        time.sleep((nextMeasurementTime - startTime).seconds)
+        timeToNextMeasurement = nextMeasurementTime - dt.datetime.now()
+        time.sleep((timeToNextMeasurement.microseconds) * 1e-6 +
+                   timeToNextMeasurement.seconds)
+
+        # 1 second added on otherwise it would start on the 59th second of
+        # the previous minute, the joys of timedelta calculations
