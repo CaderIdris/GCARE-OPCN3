@@ -352,8 +352,8 @@ class OPCN3:
                     }
                     if self.config["Use Bin Data"]:
                         opcHistData["Bin Data"] = dict()
-                        for binNumber in range(1, 25):
-                            opcHistData["Bin Data"][f"Bin {binNumber}"] = \
+                        for binNumber in range(0, 24):
+                            opcHistData["Bin Data"][f"Bin {binNumber + 1}"] = \
                                 combine_bytes(opcHistBytes[(binNumber * 2)],
                                     opcHistBytes[(binNumber * 2) + 1])
                     self.latestData = opcHistData
