@@ -15,4 +15,4 @@ echo "Comment=" >> ~/Desktop/OPCN3.desktop
 echo "Icon=" >> ~/Desktop/OPCN3.desktop
 
 sudo chmod +x ~/Desktop/OPCN3.desktop  # Make it executable
-gio set ~/Desktop/OPCN3.desktop metadata::trusted true  # Allows user to click on shortcut to run it
+sudo dbus-launch gio set ~/Desktop/OPCN3.desktop metadata::trusted true  # Allows user to click on shortcut to run it
