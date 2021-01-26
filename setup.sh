@@ -1,3 +1,5 @@
+#!/bin/bash
+
 sudo usermod -a -G dialout $USERNAME
 sudo apt install python3-pip
 sudo apt install python3-venv
