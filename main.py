@@ -81,7 +81,7 @@ from peripherals.OPCN3 import OPCN3 as OPC
 fancyPrintCharacter = '\U0001F533'
 
 
-def fancy_print(str_to_print, length=100, form='NORM', char='#'):
+def fancy_print(str_to_print, length=70, form='NORM', char='#'):
     """ Makes strings output to the console look nicer
 
     This function is used to make the console output of python
@@ -171,28 +171,35 @@ def find_valid_path():
             calculated via the relative path by os.path.expanduser()
             The OPCData directory is added to these paths
     """
-    media_dirs = [f.path for f in os.scandir(f"/media/{getpass.getuser()}/")
-                    if f.is_dir()]
-    if len(media_dirs) == 1:
-        return f"{media_dirs[0]}OPC Data/"
-    elif len(media_dirs) > 1:
-        fancy_print(f"{len(media_dirs)} external devices found in " \
-            f"/media/{getpass.getuser()}/. Unmount {len(media_dirs) - 1} " \
-            f"devices or give file path", char=fancyPrintCharacter)
-    else:
+    try:
+        media_dirs = [f.path for f in os.scandir(f"/media/{getpass.getuser()}/")
+                        if f.is_dir()]
+        if len(media_dirs) == 1:
+            return f"{media_dirs[0]}OPC Data/"
+        elif len(media_dirs) > 1:
+            fancy_print(f"{len(media_dirs)} external devices found in " \
+                f"/media/{getpass.getuser()}/. Unmount {len(media_dirs) - 1} " \
+                f"devices or give file path", char=fancyPrintCharacter)
+        else:
+            fancy_print(f"No external devices found in /media/{getpass.getuser()}/",
+                char=fancyPrintCharacter)
+    except FileNotFoundError:
         fancy_print(f"No external devices found in /media/{getpass.getuser()}/",
             char=fancyPrintCharacter)
-    mnt_dirs = [f.path for f in os.scandir("/mnt") if f.is_dir()]
-    if len(mnt_dirs) == 1:
-        return f"{mnt_dirs[0]}OPC Data/"
-    elif len(mnt_dirs) > 1:
-        fancy_print(f"{len(mnt_dirs)} found in /mnt/." \
-            f" Unmount {len(mnt_dirs) - 1} devices or give file path",
-            char=fancyPrintCharacter)
-    else:
+    try:
+        mnt_dirs = [f.path for f in os.scandir("/mnt") if f.is_dir()]
+        if len(mnt_dirs) == 1:
+            return f"{mnt_dirs[0]}OPC Data/"
+        elif len(mnt_dirs) > 1:
+            fancy_print(f"{len(mnt_dirs)} found in /mnt/." \
+                f" Unmount {len(mnt_dirs) - 1} devices or give file path",
+                char=fancyPrintCharacter)
+        else:
+            fancy_print(f"No external devices found in /mnt/",
+                char=fancyPrintCharacter)
+    except FileNotFoundError:
         fancy_print(f"No external devices found in /mnt/",
             char=fancyPrintCharacter)
-
     return os.path.expanduser("~/Documents/OPC Data/")
 
 
@@ -409,7 +416,6 @@ if __name__ == "__main__":
     fancy_print(f'Version: {__version__}', char=fancyPrintCharacter)
     fancy_print(f'Status:  {__status__}', char=fancyPrintCharacter)
     fancy_print(f'License: {__license__}', char=fancyPrintCharacter)
-    fancy_print(f'Copyright: {__copyright__}', char=fancyPrintCharacter)
     fancy_print('', form='LINE', char=fancyPrintCharacter)
 
     ### LOAD OPC SETTINGS
