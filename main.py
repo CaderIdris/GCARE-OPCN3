@@ -259,7 +259,7 @@ def first_measurement_time(timeInterval, currentTime):
             microsecond=0)
     else:
         nextMeasurement = currentTime.replace(minute=0, second=0,
-            microsecond=0) + dt.timedelta(hour=1)
+            microsecond=0) + dt.timedelta(hours=1)
     return nextMeasurement
 
 
@@ -482,15 +482,15 @@ if __name__ == "__main__":
     # the previous minute, the joys of timedelta calculations
     while True:
         startTime = dt.datetime.now()
-        print('Measuring data'.ljust(140), end="\r", flush=True)
+        print('Measuring data'.ljust(70), end="\r", flush=True)
         opc.getData()
-        print('Storing Data'.ljust(140), end="\r", flush=True)
+        print('Storing Data'.ljust(70), end="\r", flush=True)
         save_to_file(opc.formatData(), dt.datetime.now(),
             opcConfig["File Path"])
         nextMeasurementTime = next_measurement_time(timeDifference,
             startTime)
         print(f'{opc.printOutput()} | Next Measurement: ' \
-              f'{nextMeasurementTime.strftime("%H:%M:%S")}'.ljust(140),
+              f'{nextMeasurementTime.strftime("%H:%M:%S")}'.ljust(70),
               end="\r", flush=True)
         timeToNextMeasurement = nextMeasurementTime - dt.datetime.now()
         time.sleep((timeToNextMeasurement.microseconds) * 1e-6 +

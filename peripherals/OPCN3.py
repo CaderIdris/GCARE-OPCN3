@@ -454,13 +454,9 @@ class OPCN3:
         if self.latestData is not None:
             return f"PM1: {str(self.latestData['PM1 (ug/m-3)']).ljust(7)}| " \
                 f"PM2.5: {str(self.latestData['PM2.5 (ug/m-3)']).ljust(7)}| " \
-                f"PM10: {str(self.latestData['PM10 (ug/m-3)']).ljust(7)}| " \
-                f"RH: {str(self.latestData['RH (%)']).ljust(7)}| " \
-                f"Temp: {str(self.latestData['Temp (C)']).ljust(7)}| " \
-                f"Flow: {str(self.latestData['Flowrate (ml/s)']).ljust(7)}| " \
-                f"Per: {str(self.latestData['Period (s)']).ljust(7)}"
+                f"PM10: {str(self.latestData['PM10 (ug/m-3)']).ljust(7)}"
         else:
-            return "#" * 100
+            return "#" * 38
 
 
 
