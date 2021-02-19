@@ -4,6 +4,8 @@
 #### COPYRIGHT 2021, Global Centre for Clean Air Research, The University of Surrey
 #### GNU General Public License v3.0
 
+This program has been designed to be run on a Raspberry Pi running Ubuntu 20.04 LTS desktop 64 bit with an 800x600 touchscreen display. It is likely to run on other distributions and devices though some modifications may be required.
+
 Adapted from Python2 code written by Daniel Jarvis and
 licensed under GPL v3.0:
 https://github.com/JarvisSan22/OPC-N3_python
@@ -26,9 +28,9 @@ The GCARE-OPCN3 program can be run in one or two ways
 
 #### Option A: Shortcut
 
-If the GCARE-extras.sh script was run during setup, an executable shortcut should be present on the homescreen. Double click this to run the program.
+If the __GCARE-extras.__ script was run during setup, an executable shortcut should be present on the desktop. Double click this to run the program.
 
-![The Home Screen](Images/SOP/01%20-%20Shortcut.png)
+![The Desktop](Images/SOP/01%20-%20Shortcut.png)
 
 #### Option B: Terminal
 
@@ -69,13 +71,13 @@ While measuring, the program displays the latest measurement at the bottom of th
 
 ## Setup
 
-This setup section is assuming the program is being run on Ubuntu 20.04 LTS for Raspberry Pi. Other distributions and devices may vary slightly. This guide assumes Ubuntu 20.04 LTS has already been installed on the Raspberry Pi.
+This setup section is assuming the program is to be run on __Ubuntu 20.04 LTS__ for __Raspberry Pi__. Other distributions and devices may vary.
 
 ### Step 1: Power on device
 ![The Home Screen](Images/Setup/01%20-%20Homescreen.png)
 
 ### Step 2: Ensure latest updates are installed
-Ensure all packages on the Raspberry Pi are up to date. Open the terminal via `CTRL + ALT + T` or via the home menu in the bottom left of the screen.
+Ensure all packages on the device are up to date. Open the terminal via `CTRL + ALT + T` or via the home menu in the bottom left of the screen.
 
 Enter `sudo apt update` to check whether any packages require updating. Enter the password when prompted.
 
@@ -108,7 +110,7 @@ To update the repository, use the following code:
 ![Update from Github](Images/Setup/03%20-%20Update%20from%20Git.png)
 
 ### Step 4: Run setup script
-In order to setup the necessary components for the OPCN3 datalogger to run, the setup script has to be run.
+In order to setup the necessary components for the OPCN3 datalogger to run, the __setup.sh__ script has to be run.
 1. `cd ~/Documents/GCARE-OPCN3` means any future commands will be executed in the git repository
 2. `ls` lists all files in the directory, this allows you to check the setup file is present.
 3. `bash setup.sh` or `./setup.sh` runs the setup script. The users password is required as some commands require to be run as the superuser.

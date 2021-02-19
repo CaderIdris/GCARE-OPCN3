@@ -1,6 +1,7 @@
 #!/bin/bash
 
 sudo usermod -a -G dialout $USERNAME
+sudo usermod -a -G plugdev $USERNAME
 sudo apt install python3-pip
 sudo apt install python3-venv
 python3 -m venv "OPCN3"
