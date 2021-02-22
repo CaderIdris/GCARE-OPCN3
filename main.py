@@ -247,7 +247,7 @@ def first_measurement_time(timeInterval, currentTime):
         warnings.warn("Specified time interval not expected, defaulting to" \
                       " 1m")
         timeInterval = '1m'
-    validMinutes = list(range(1, 61, setIntervals[timeInterval]))
+    validMinutes = list(range(0, 60, setIntervals[timeInterval]))
 
     currentMinute = int(currentTime.strftime("%M"))
     nextMinute = 60
