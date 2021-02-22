@@ -252,8 +252,9 @@ def first_measurement_time(timeInterval, currentTime):
     currentMinute = int(currentTime.strftime("%M"))
     nextMinute = 60
     for index, minute in enumerate(validMinutes[1:]):
-        if minute > currentMinute > validMinutes[index - 1]:
+        if minute > currentMinute:
             nextMinute = minute
+            break
     if nextMinute < 60:
         nextMeasurement = currentTime.replace(minute=nextMinute, second=0,
             microsecond=0)
