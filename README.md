@@ -4,7 +4,9 @@
 #### COPYRIGHT 2021, Global Centre for Clean Air Research, The University of Surrey
 #### GNU General Public License v3.0
 
-This program has been designed to be run on a Raspberry Pi running Ubuntu 20.04 LTS desktop 64 bit with an 800x600 touchscreen display. It is likely to run on other distributions and devices though some modifications may be required.
+__CAUTION: The run.sh script currently elevates main.py to have superuser permissions to fix a bug before immediate deployment. A later update will fix the bug and remove superuser permissions__
+
+This program has been designed to be run on a Raspberry Pi running Ubuntu 20.04 LTS desktop 64 bit with an 800x640 touchscreen display. It is likely to run on other distributions and devices though some modifications may be required.
 
 Adapted from Python2 code written by Daniel Jarvis and
 licensed under GPL v3.0:
@@ -17,6 +19,7 @@ https://github.com/JarvisSan22/OPC-N3_python
 2. [Settings](#settings)
 3. [Setup](#setup)
 4. [API](#api)
+5. [Components](#components)
 
 ---
 
@@ -139,3 +142,15 @@ The program can then be initialised by double clicking the shortcut on the deskt
 ## API
 
 >To be added
+
+## Components
+
+### Prototype
+
+The prototypes of these sensors used the following components:
+1. Raspberry Pi 4 Model B 4GB (Running Ubuntu Desktop 20.04 LTS 64 bit)
+2. OKDO Raspberry Pi 3 7" Touchscreen Display (Compatible with RPi 4)
+3. Alphasense OPC-N3
+4. Alphasense USB-SPI Bridge
+5. Verbatim 32 GB Micro SD Card
+6. Verbatim 64 GB USB3 Memory Stick
