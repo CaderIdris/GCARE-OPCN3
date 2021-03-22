@@ -3,4 +3,4 @@ cd $(dirname $0)
 
 sleep 20s
 
-bash run.sh
+x-terminal-emulator -e bash run.sh
