@@ -175,7 +175,7 @@ def find_valid_path():
         media_dirs = [f.path for f in os.scandir(f"/media/{getpass.getuser()}/")
                         if f.is_dir()]
         if len(media_dirs) == 1:
-            return f"{media_dirs[0]}OPC Data/"
+            return f"{media_dirs[0]}/OPC Data/"
         elif len(media_dirs) > 1:
             fancy_print(f"{len(media_dirs)} external devices found in " \
                 f"/media/{getpass.getuser()}/. Unmount {len(media_dirs) - 1} " \
@@ -189,7 +189,7 @@ def find_valid_path():
     try:
         mnt_dirs = [f.path for f in os.scandir("/mnt") if f.is_dir()]
         if len(mnt_dirs) == 1:
-            return f"{mnt_dirs[0]}OPC Data/"
+            return f"{mnt_dirs[0]}/OPC Data/"
         elif len(mnt_dirs) > 1:
             fancy_print(f"{len(mnt_dirs)} found in /mnt/." \
                 f" Unmount {len(mnt_dirs) - 1} devices or give file path",
