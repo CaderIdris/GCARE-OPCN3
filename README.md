@@ -4,8 +4,6 @@
 #### COPYRIGHT 2021, Global Centre for Clean Air Research, The University of Surrey
 #### GNU General Public License v3.0
 
-__CAUTION: The run.sh script currently elevates main.py to have superuser permissions to fix a bug before immediate deployment. A later update will fix the bug and remove superuser permissions__
-
 This program has been designed to be run on a Raspberry Pi running Ubuntu 20.04 LTS desktop 64 bit with an 800x640 touchscreen display. It is likely to run on other distributions and devices though some modifications may be required.
 
 Adapted from Python2 code written by Daniel Jarvis and
@@ -27,15 +25,19 @@ https://github.com/JarvisSan22/OPC-N3_python
 
 ### Step 1: Run program
 
-The GCARE-OPCN3 program can be run in one or two ways
+The GCARE-OPCN3 program can be run in one of three ways
 
 #### Option A: Shortcut
 
-If the __GCARE-extras.__ script was run during setup, an executable shortcut should be present on the desktop. Double click this to run the program.
+If the __GCARE-extras.sh__ script was run during setup, an executable shortcut should be present on the desktop. Double click this to run the program.
 
 ![The Desktop](Images/SOP/01%20-%20Shortcut.png)
 
-#### Option B: Terminal
+#### Option B: Autorun
+
+If the __GCARE-extras.sh__ script was run during setup, the program will automatically initialise 20 seconds after login.
+
+#### Option C: Terminal
 
 The program can also be initialised via the terminal.
 1. `cd ~/Documents/GCARE-OPCN3` (or whichever directory the repository has been saved in)
@@ -63,7 +65,6 @@ The sixth block indicates the time the measurement program started and when the 
 While measuring, the program displays the latest measurement at the bottom of the terminal.
 
 ![Measurement Output](Images/SOP/03%20-%20Output.png)
-
 ---
 
 ## Settings
@@ -133,7 +134,7 @@ It isn't advised to run unknown code with elevated permissions, so ensure you've
 
 ![GCARE Extras](Images/Setup/04%20-%20GCARE%20Extras.png)
 
-The program can then be initialised by double clicking the shortcut on the desktop.
+The program can then be initialised by double clicking the shortcut on the desktop, as well as running on login.
 
 ![GCARE Extras](Images/Setup/04%20-%20Shortcut.png)
 
