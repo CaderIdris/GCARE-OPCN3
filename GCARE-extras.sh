@@ -3,4 +3,4 @@
 
 directory=$(pwd)
 autorun_command="${directory}/autorun.sh"
-sudo printf "\n${autorun_command}" >> ~/.profile
+grep "bash ${autorun_command}" || sudo printf "\nbash ${autorun_command}" >> ~/.profile
