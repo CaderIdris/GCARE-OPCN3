@@ -1,5 +1,5 @@
 # GCARE OPC-N3 Monitor
-#### Currently in Alpha
+#### Currently in Beta
 #### Joe Hayward (j.d.hayward@surrey.ac.uk)
 #### COPYRIGHT 2021, Global Centre for Clean Air Research, The University of Surrey
 #### GNU General Public License v3.0
