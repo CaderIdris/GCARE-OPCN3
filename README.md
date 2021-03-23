@@ -123,8 +123,10 @@ It isn't advised to run unknown code with elevated permissions, so ensure you've
 
 ![Run Setup Script](Images/Setup/04%20-%20Run%20Setup%20Script.png)
 
-#### Optional Step 4A:
-The repository also contains __GCARE-extras.sh__. This script is specifically for the GCARE use case though others may find it useful. It currently creates a shortcut on the desktop to __run.sh__, allowing the program to easily be initialised using a touchscreen.
+#### _(Optional)_ Step 5: Extra features
+The repository also contains __GCARE-extras.sh__. This script is specifically for the GCARE use case though others may find it useful. It currently performs the following functions:
+- Creates a shortcut on the desktop, initialising the program. There are currently some issues and in some cases the shortcut requires manual intervention to 'Allow Launching'
+- Creates an autorun script in `~/.profile`, running the program on login
 
 1. `cd ~/Documents/GCARE-OPCN3` (or whichever directory the repository has been saved in)
 2. `ls` lists all files in the directory, this allows you to check the GCARE-extras file is present.
@@ -137,6 +139,9 @@ It isn't advised to run unknown code with elevated permissions, so ensure you've
 The program can then be initialised by double clicking the shortcut on the desktop, as well as running on login.
 
 ![GCARE Extras](Images/Setup/04%20-%20Shortcut.png)
+
+#### _(Optional)_ Step 6: USB permissions
+__usb-permissions.sh__ was created in a response to the program not having the correct permissions to write data to external media. When run, __usb-permissions.sh__ iterates over all removeable media currently plugged in to a device and adds each device to `/etc/fstab`. This will add __every__ device in your user's media folder to `/etc/fstab`, so manual addition of your USB device may be a better option for some.
 
 ---
 

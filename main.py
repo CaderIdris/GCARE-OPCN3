@@ -65,7 +65,7 @@ __license__ = "GNU General Public License v3.0"
 __version__ = "2021.1.14.1318"
 __maintainer__ = "Joe Hayward"
 __email__ = "j.d.hayward@surrey.ac.uk"
-__status__ = "Alpha"
+__status__ = "Beta"
 
 import datetime as dt
 import json
