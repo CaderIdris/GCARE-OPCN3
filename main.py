@@ -58,8 +58,9 @@ filepath. If this file doesn't exist, it is made.
 """
 
 __author__ = "Joe Hayward"
-__copyright__ = "2020, Global Centre for Clean Air Research, "\
-                "The University of Surrey"
+__copyright__ = (
+    "2020, Global Centre for Clean Air Research, " "The University of Surrey"
+)
 __credits__ = ["Joe Hayward"]
 __license__ = "GNU General Public License v3.0"
 __version__ = "2021.1.14.1318"
@@ -78,11 +79,11 @@ import serial
 
 from peripherals.OPCN3 import OPCN3 as OPC
 
-fancyPrintCharacter = '\U0001F533'
+fancyPrintCharacter = "\U0001F533"
 
 
-def fancy_print(str_to_print, length=70, form='NORM', char='#'):
-    """ Makes strings output to the console look nicer
+def fancy_print(str_to_print, length=70, form="NORM", char="#"):
+    """Makes strings output to the console look nicer
 
     This function is used to make the console output of python
     scripts look nicer. This function is used in a range of
@@ -121,19 +122,19 @@ def fancy_print(str_to_print, length=70, form='NORM', char='#'):
     length_offset = 0
     if len(char) > 1:
         char = char[0]
-    if len(char.encode('utf-8')) > 1:
+    if len(char.encode("utf-8")) > 1:
         length_adjust = 0.5
         length_offset = 1
-    if form == 'TITLE':
+    if form == "TITLE":
         print(f"{char} {str_to_print.center(length - 4, ' ')} {char}")
-    elif form == 'LINE':
-        print(char*int(((length) * length_adjust) + length_offset))
+    elif form == "LINE":
+        print(char * int(((length) * length_adjust) + length_offset))
     else:
         print(f"{char} {str_to_print.ljust(length - 4, ' ')} {char}")
 
 
 def find_valid_path():
-    """ Finds and returns a valid path to save data to
+    """Finds and returns a valid path to save data to
 
     If a path isn't declared, this program attempts to find one. First,
     it looks for any external devices located in the media directory.
@@ -172,39 +173,54 @@ def find_valid_path():
             The OPCData directory is added to these paths
     """
     try:
-        media_dirs = [f.path for f in os.scandir(f"/media/{getpass.getuser()}/")
-                        if f.is_dir()]
+        media_dirs = [
+            f.path
+            for f in os.scandir(f"/media/{getpass.getuser()}/")
+            if f.is_dir()
+        ]
         if len(media_dirs) == 1:
             return f"{media_dirs[0]}/OPC Data/"
         elif len(media_dirs) > 1:
-            fancy_print(f"{len(media_dirs)} external devices found in " \
-                f"/media/{getpass.getuser()}/. Unmount {len(media_dirs) - 1} " \
-                f"devices or give file path", char=fancyPrintCharacter)
+            fancy_print(
+                f"{len(media_dirs)} external devices found in "
+                f"/media/{getpass.getuser()}/. Unmount "
+                f"{len(media_dirs) - 1} devices or give file path",
+                char=fancyPrintCharacter,
+            )
         else:
-            fancy_print(f"No external devices found in /media/{getpass.getuser()}/",
-                char=fancyPrintCharacter)
+            fancy_print(
+                f"No external devices found in /media/"
+                f"{getpass.getuser()}/",
+                char=fancyPrintCharacter,
+            )
     except FileNotFoundError:
-        fancy_print(f"No external devices found in /media/{getpass.getuser()}/",
-            char=fancyPrintCharacter)
+        fancy_print(
+            f"No external devices found in /media/{getpass.getuser()}/",
+            char=fancyPrintCharacter,
+        )
     try:
         mnt_dirs = [f.path for f in os.scandir("/mnt") if f.is_dir()]
         if len(mnt_dirs) == 1:
             return f"{mnt_dirs[0]}/OPC Data/"
         elif len(mnt_dirs) > 1:
-            fancy_print(f"{len(mnt_dirs)} found in /mnt/." \
+            fancy_print(
+                f"{len(mnt_dirs)} found in /mnt/."
                 f" Unmount {len(mnt_dirs) - 1} devices or give file path",
-                char=fancyPrintCharacter)
+                char=fancyPrintCharacter,
+            )
         else:
-            fancy_print(f"No external devices found in /mnt/",
-                char=fancyPrintCharacter)
+            fancy_print(
+                f"No external devices found in /mnt/", char=fancyPrintCharacter
+            )
     except FileNotFoundError:
-        fancy_print(f"No external devices found in /mnt/",
-            char=fancyPrintCharacter)
+        fancy_print(
+            f"No external devices found in /mnt/", char=fancyPrintCharacter
+        )
     return os.path.expanduser("~/Documents/OPC Data/")
 
 
 def first_measurement_time(timeInterval, currentTime):
-    """ Works out when the first measurement should take place
+    """Works out when the first measurement should take place
 
     The first measurement is synced up so measurements will always
     fall on the start of every hour and increase in intervals set in
@@ -236,17 +252,18 @@ def first_measurement_time(timeInterval, currentTime):
             nextMeasurement
     """
     setIntervals = {
-        '1m': 1,
-        '5m': 5,
-        '10m': 10,
-        '15m': 15,
-        '30m': 30,
-        '1h': 60
+        "1m": 1,
+        "5m": 5,
+        "10m": 10,
+        "15m": 15,
+        "30m": 30,
+        "1h": 60,
     }
     if timeInterval not in list(setIntervals.keys()):
-        warnings.warn("Specified time interval not expected, defaulting to" \
-                      " 1m")
-        timeInterval = '1m'
+        warnings.warn(
+            "Specified time interval not expected, defaulting to" " 1m"
+        )
+        timeInterval = "1m"
     validMinutes = list(range(0, 60, setIntervals[timeInterval]))
 
     currentMinute = int(currentTime.strftime("%M"))
@@ -256,53 +273,55 @@ def first_measurement_time(timeInterval, currentTime):
             nextMinute = minute
             break
     if nextMinute < 60:
-        nextMeasurement = currentTime.replace(minute=nextMinute, second=0,
-            microsecond=0)
+        nextMeasurement = currentTime.replace(
+            minute=nextMinute, second=0, microsecond=0
+        )
     else:
-        nextMeasurement = currentTime.replace(minute=0, second=0,
-            microsecond=0) + dt.timedelta(hours=1)
+        nextMeasurement = currentTime.replace(
+            minute=0, second=0, microsecond=0
+        ) + dt.timedelta(hours=1)
     return nextMeasurement
 
 
 def next_measurement_time(timeInterval, currentTime):
-    """ Calculates when the next measurement is
+    """Calculates when the next measurement is
 
-        Keyword Arguments:
-            timeInterval (str): The interval between measurements set
-                                in OPCSettings.json. If an incorrect
-                                value is set, the program warns the
-                                user and defaults to 1m
+    Keyword Arguments:
+        timeInterval (str): The interval between measurements set
+                            in OPCSettings.json. If an incorrect
+                            value is set, the program warns the
+                            user and defaults to 1m
 
-            currentTime (datetime): The time the last measurement took
-                                    place
+        currentTime (datetime): The time the last measurement took
+                                place
 
-        Parameters:
-            setIntervals (dict): The number of minutes between set time
-                                 intervals. This should be moved to a
-                                 json later on for easier customisation
+    Parameters:
+        setIntervals (dict): The number of minutes between set time
+                             intervals. This should be moved to a
+                             json later on for easier customisation
 
-            nextTime (datetime): When the next measurement will take
-                                 place
+        nextTime (datetime): When the next measurement will take
+                             place
 
-        Returns:
-            nextTime with second and microsecond set to 0
+    Returns:
+        nextTime with second and microsecond set to 0
     """
     setIntervals = {
-        '1m': 1,
-        '5m': 5,
-        '10m': 10,
-        '15m': 15,
-        '30m': 30,
-        '1h': 60
+        "1m": 1,
+        "5m": 5,
+        "10m": 10,
+        "15m": 15,
+        "30m": 30,
+        "1h": 60,
     }
     if timeInterval not in list(setIntervals.keys()):
-        timeInterval = '1m'
+        timeInterval = "1m"
     nextTime = currentTime + dt.timedelta(minutes=setIntervals[timeInterval])
     return nextTime.replace(second=0, microsecond=0)
 
 
 def save_to_file(opcData, timestamp, filePath):
-    """ Saved recorded data to OPC Data directory, creating a file with
+    """Saved recorded data to OPC Data directory, creating a file with
     appropriate headers if one doesn't exist
 
     The formatted data measured by the OPC is saved to a csv file.
@@ -359,17 +378,21 @@ def save_to_file(opcData, timestamp, filePath):
     try:
         with open(fileName, "r+") as csvFile:
             fileHeaders = csvFile.readline()
-            binHeadersPresent = ("Bin" in fileHeaders)
+            binHeadersPresent = "Bin" in fileHeaders
             binDataPresent = opcData["Bin Headers"] is not None
             csvFile.read()
             if binHeadersPresent and binDataPresent:
                 # If there's bin headers and bin data, go for it!
-                csvFile.write(f'{measurementTime}, {opcData["Data"]}, ' \
-                    f'{opcData["Bin Data"]}\n')
+                csvFile.write(
+                    f'{measurementTime}, {opcData["Data"]}, '
+                    f'{opcData["Bin Data"]}\n'
+                )
             elif binHeadersPresent:
                 # If there's bin headers and no bin data, log None
-                csvFile.write(f'{measurementTime}, {opcData["Data"]}, ' \
-                    f'{bin_Nones()}\n')
+                csvFile.write(
+                    f'{measurementTime}, {opcData["Data"]}, '
+                    f"{bin_Nones()}\n"
+                )
             else:
                 # If there's bin data but no bin headers, or no bin
                 # data and no bin headers, don't log it
@@ -378,10 +401,14 @@ def save_to_file(opcData, timestamp, filePath):
         fileHeaders = None
         firstMeasurements = None
         if opcData["Bin Headers"] is not None:
-            fileHeaders = f'Timestamp, {opcData["Headers"]}, ' \
+            fileHeaders = (
+                f'Timestamp, {opcData["Headers"]}, '
                 f'{opcData["Bin Headers"]}'
-            firstMeasurements = f'{measurementTime}, {opcData["Data"]}, ' \
+            )
+            firstMeasurements = (
+                f'{measurementTime}, {opcData["Data"]}, '
                 f'{opcData["Bin Data"]}'
+            )
         elif opcData["Headers"] is not None:
             fileHeaders = f'Timestamp, {opcData["Headers"]}'
             firstMeasurements = f'{measurementTime}, {opcData["Data"]}'
@@ -389,12 +416,12 @@ def save_to_file(opcData, timestamp, filePath):
             os.makedirs(filePath)
         if (fileHeaders and firstMeasurements) is not None:
             with open(fileName, "w") as csvFile:
-                csvFile.write(f'{fileHeaders}\n')
-                csvFile.write(f'{firstMeasurements}\n')
+                csvFile.write(f"{fileHeaders}\n")
+                csvFile.write(f"{firstMeasurements}\n")
 
 
 def bin_Nones():
-    """ One line function to return blank measurements for the bin
+    """One line function to return blank measurements for the bin
     values
 
         Keyword Arguments:
@@ -403,23 +430,23 @@ def bin_Nones():
         Returns:
             24 comma delimited None values for csv file
     """
-    return ('None, ' * 23) + 'None'
-
+    return ("None, " * 23) + "None"
 
 
 if __name__ == "__main__":
-    ### PROGRAM INIT
-    fancy_print('', form='LINE', char=fancyPrintCharacter)
-    fancy_print('GCARE OPC-N3 Python Script', form='TITLE',
-        char=fancyPrintCharacter)
-    fancy_print(f'Author:  {__author__}', char=fancyPrintCharacter)
-    fancy_print(f'Contact: {__email__}', char=fancyPrintCharacter)
-    fancy_print(f'Version: {__version__}', char=fancyPrintCharacter)
-    fancy_print(f'Status:  {__status__}', char=fancyPrintCharacter)
-    fancy_print(f'License: {__license__}', char=fancyPrintCharacter)
-    fancy_print('', form='LINE', char=fancyPrintCharacter)
+    # PROGRAM INIT
+    fancy_print("", form="LINE", char=fancyPrintCharacter)
+    fancy_print(
+        "GCARE OPC-N3 Python Script", form="TITLE", char=fancyPrintCharacter
+    )
+    fancy_print(f"Author:  {__author__}", char=fancyPrintCharacter)
+    fancy_print(f"Contact: {__email__}", char=fancyPrintCharacter)
+    fancy_print(f"Version: {__version__}", char=fancyPrintCharacter)
+    fancy_print(f"Status:  {__status__}", char=fancyPrintCharacter)
+    fancy_print(f"License: {__license__}", char=fancyPrintCharacter)
+    fancy_print("", form="LINE", char=fancyPrintCharacter)
 
-    ### LOAD OPC SETTINGS
+    # LOAD OPC SETTINGS
     with open("OPCSettings.json", "r") as opcConfigJson:
         opcConfig = json.load(opcConfigJson)
     serialConfig = {
@@ -429,73 +456,90 @@ if __name__ == "__main__":
         "bytesize": serial.EIGHTBITS,
         "stopbits": serial.STOPBITS_ONE,
         "xonxoff": False,
-        "timeout": 1
+        "timeout": 1,
     }
     timeDifference = opcConfig["Measurement Time"]
     if opcConfig["File Path"] == "":
         opcConfig["File Path"] = find_valid_path()
     if not os.path.isdir(opcConfig["File Path"]):
         os.makedirs(opcConfig["File Path"])
-    fancy_print(f'- Saving data to{opcConfig["File Path"]}',
-    char=fancyPrintCharacter)
-    fancy_print('', form='LINE', char=fancyPrintCharacter)
-    fancy_print('Connecting to OPC-N3', char=fancyPrintCharacter)
+    fancy_print(
+        f'- Saving data to{opcConfig["File Path"]}', char=fancyPrintCharacter
+    )
+    fancy_print("", form="LINE", char=fancyPrintCharacter)
+    fancy_print("Connecting to OPC-N3", char=fancyPrintCharacter)
 
-    ### Initialise the OPC
+    # Initialise the OPC
     time.sleep(2)  # The OPC needs to boot
     opc = OPC(serialConfig, opcConfig)
     opc.initConnection()
-    fancy_print('- Connection Made', char=fancyPrintCharacter)
-    fancy_print('', form='LINE', char=fancyPrintCharacter)
+    fancy_print("- Connection Made", char=fancyPrintCharacter)
+    fancy_print("", form="LINE", char=fancyPrintCharacter)
 
-    ### Test the connection
-    fancy_print('Testing Connection', char=fancyPrintCharacter)
-    fancy_print('- Disabling Fan', char=fancyPrintCharacter)
+    # Test the connection
+    fancy_print("Testing Connection", char=fancyPrintCharacter)
+    fancy_print("- Disabling Fan", char=fancyPrintCharacter)
     opc.fanPower(False)
-    fancy_print('- Enabling Fan', char=fancyPrintCharacter)
+    fancy_print("- Enabling Fan", char=fancyPrintCharacter)
     opc.fanPower(True)
-    fancy_print('- Disabling Laser', char=fancyPrintCharacter)
+    fancy_print("- Disabling Laser", char=fancyPrintCharacter)
     opc.laserPower(False)
-    fancy_print('- Enabling Laser', char=fancyPrintCharacter)
+    fancy_print("- Enabling Laser", char=fancyPrintCharacter)
     opc.laserPower(True)
-    fancy_print('', form='LINE', char=fancyPrintCharacter)
+    fancy_print("", form="LINE", char=fancyPrintCharacter)
 
-    ### Record data
-    fancy_print(f'Recording measurements', char=fancyPrintCharacter)
-    fancy_print(f'- Exit via CTRL-C or by closing the terminal',
-        char=fancyPrintCharacter)
-    fancy_print(f'-- Do not exit if "Storing Data" is displayed',
-        char=fancyPrintCharacter)
-    fancy_print(f'-- This could corrupt the file being written to',
-        char=fancyPrintCharacter)
-    fancy_print('', form='LINE', char=fancyPrintCharacter)
-    nextMeasurementTime = first_measurement_time(timeDifference,
-        dt.datetime.now())
-    fancy_print(f'Current time is {dt.datetime.now().strftime("%H:%M:%S")}',
-        char=fancyPrintCharacter)
-    fancy_print(f'- Next measurement will be at ' \
-                f'{nextMeasurementTime.strftime("%H:%M:%S")}',
-        char=fancyPrintCharacter)
-    fancy_print('', form='LINE', char=fancyPrintCharacter)
+    # Record data
+    fancy_print(f"Recording measurements", char=fancyPrintCharacter)
+    fancy_print(
+        f"- Exit via CTRL-C or by closing the terminal",
+        char=fancyPrintCharacter,
+    )
+    fancy_print(
+        f'-- Do not exit if "Storing Data" is displayed',
+        char=fancyPrintCharacter,
+    )
+    fancy_print(
+        f"-- This could corrupt the file being written to",
+        char=fancyPrintCharacter,
+    )
+    fancy_print("", form="LINE", char=fancyPrintCharacter)
+    nextMeasurementTime = first_measurement_time(
+        timeDifference, dt.datetime.now()
+    )
+    fancy_print(
+        f'Current time is {dt.datetime.now().strftime("%H:%M:%S")}',
+        char=fancyPrintCharacter,
+    )
+    fancy_print(
+        f"- Next measurement will be at "
+        f'{nextMeasurementTime.strftime("%H:%M:%S")}',
+        char=fancyPrintCharacter,
+    )
+    fancy_print("", form="LINE", char=fancyPrintCharacter)
     print()
     time.sleep((nextMeasurementTime - dt.datetime.now()).seconds + 1)
     # 1 second added on otherwise it would start on the 59th second of
     # the previous minute, the joys of timedelta calculations
     while True:
         startTime = dt.datetime.now()
-        print('Measuring data'.ljust(70), end="\r", flush=True)
+        print("Measuring data".ljust(70), end="\r", flush=True)
         opc.getData()
-        print('Storing Data'.ljust(70), end="\r", flush=True)
-        save_to_file(opc.formatData(), dt.datetime.now(),
-            opcConfig["File Path"])
-        nextMeasurementTime = next_measurement_time(timeDifference,
-            startTime)
-        print(f'{opc.printOutput()} | Next Measurement: ' \
-              f'{nextMeasurementTime.strftime("%H:%M:%S")}'.ljust(70),
-              end="\r", flush=True)
+        print("Storing Data".ljust(70), end="\r", flush=True)
+        save_to_file(
+            opc.formatData(), dt.datetime.now(), opcConfig["File Path"]
+        )
+        nextMeasurementTime = next_measurement_time(timeDifference, startTime)
+        print(
+            f"{opc.printOutput()} | Next Measurement: "
+            f'{nextMeasurementTime.strftime("%H:%M:%S")}'.ljust(70),
+            end="\r",
+            flush=True,
+        )
         timeToNextMeasurement = nextMeasurementTime - dt.datetime.now()
-        time.sleep((timeToNextMeasurement.microseconds) * 1e-6 +
-                   timeToNextMeasurement.seconds)
+        time.sleep(
+            (timeToNextMeasurement.microseconds) * 1e-6
+            + timeToNextMeasurement.seconds
+        )
 
         # 1 second added on otherwise it would start on the 59th second of
         # the previous minute, the joys of timedelta calculations

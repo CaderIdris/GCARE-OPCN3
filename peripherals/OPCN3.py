@@ -27,8 +27,9 @@ Functions adapted from this code is marked in the docstrings.
 """
 
 __author__ = "Joe Hayward"
-__copyright__ = "2020, Global Centre for Clean Air Research, "\
-                "The University of Surrey"
+__copyright__ = (
+    "2020, Global Centre for Clean Air Research, " "The University of Surrey"
+)
 __credits__ = ["Joe Hayward"]
 __license__ = "GNU General Public License v3.0"
 __version__ = "2021.1.12.1822"
@@ -42,9 +43,10 @@ import time
 
 import serial
 
+
 @dataclass
 class SPIBytes:
-    """ Dataclass containing bytecodes that command the OPC to perform
+    """Dataclass containing bytecodes that command the OPC to perform
     various functions
 
     All bytecodes are taken from Alphasense Document 072-0503:
@@ -77,6 +79,7 @@ class SPIBytes:
             reqData (int): The command byte used to request PM data.
                            This also resets the histogram.
     """
+
     adUSBAdapter: int = 0x5A  # Address the USB Adapter
     adOPC: int = 0x61  # Address the OPC
     pCommand: int = 0x03  # Command byte for peripherals (Fan/Laser)
@@ -92,7 +95,7 @@ class SPIBytes:
 
 
 class OPCN3:
-    """ Represents an OPC-N3 connected via USB-SPI
+    """Represents an OPC-N3 connected via USB-SPI
 
     Attributes:
         opc (serial object): The serial connection to the OPC-N3
@@ -127,20 +130,21 @@ class OPCN3:
         printOutput: Returns data stored in latestData in a format to
                      be printed
     """
+
     def __init__(self, serialConfig, deviceConfig):
-        """ Initialises the class
+        """Initialises the class
 
-            Keyword Arguments:
-                serialConfig (dict): Contains all necessary information
-                                     for pySerial3 to make a connection
+        Keyword Arguments:
+            serialConfig (dict): Contains all necessary information
+                                 for pySerial3 to make a connection
 
-                deviceConfig (dict): User generated config file
-                                     indicating operating parameters of
-                                     the instrument
+            deviceConfig (dict): User generated config file
+                                 indicating operating parameters of
+                                 the instrument
 
-            Adapted from Python2 code written by Daniel Jarvis and
-            licensed under GPL v3.0:
-            https://github.com/JarvisSan22/OPC-N3_python
+        Adapted from Python2 code written by Daniel Jarvis and
+        licensed under GPL v3.0:
+        https://github.com/JarvisSan22/OPC-N3_python
         """
         self.opc = serial.Serial(**serialConfig)
         self.wait = 1e-06
@@ -150,54 +154,54 @@ class OPCN3:
         self.latestData = None
 
     def initConnection(self):
-        """ Initialises connection with the OPC-N3
+        """Initialises connection with the OPC-N3
 
-            Returns:
-                Nothing, initialises the connection with the OPC-N3
+        Returns:
+            Nothing, initialises the connection with the OPC-N3
 
 
-            Adapted from Python2 code written by Daniel Jarvis and
-            licensed under GPL v3.0:
-            https://github.com/JarvisSan22/OPC-N3_python
+        Adapted from Python2 code written by Daniel Jarvis and
+        licensed under GPL v3.0:
+        https://github.com/JarvisSan22/OPC-N3_python
         """
         time.sleep(1)
-        self.opc.write(bytearray([SPIBytes.adUSBAdapter,0x01]))
+        self.opc.write(bytearray([SPIBytes.adUSBAdapter, 0x01]))
         self.opc.read(3)
         time.sleep(self.wait)
-        self.opc.write(bytearray([SPIBytes.adUSBAdapter,0x03]))
+        self.opc.write(bytearray([SPIBytes.adUSBAdapter, 0x03]))
         self.opc.read(9)
         time.sleep(self.wait)
-        self.opc.write(bytearray([SPIBytes.adUSBAdapter,0x02,0x92,0x07]))
+        self.opc.write(bytearray([SPIBytes.adUSBAdapter, 0x02, 0x92, 0x07]))
         self.opc.read(2)
         time.sleep(self.wait)
 
     def fanPower(self, status):
-        """ Toggles OPC-N3 fan power status
+        """Toggles OPC-N3 fan power status
 
-            Keyword Arguments:
-                status (boolean): True if fan is to be turned on, false
-                                  if not
+        Keyword Arguments:
+            status (boolean): True if fan is to be turned on, false
+                              if not
 
-            Variables:
-                loopCount (int): How many attempts have been made. If
-                                 > 20, the SPI buffer is reset and
-                                 loopCount is reset to 0
+        Variables:
+            loopCount (int): How many attempts have been made. If
+                             > 20, the SPI buffer is reset and
+                             loopCount is reset to 0
 
-                fanStatus (int): The byte sent to the OPC to change
-                                 the power status of the fan.
-                                 fanOn is used to turn it on.
-                                 fanOff is used to turn it off.
+            fanStatus (int): The byte sent to the OPC to change
+                             the power status of the fan.
+                             fanOn is used to turn it on.
+                             fanOff is used to turn it off.
 
-                opcReturn (int): Bytes returned by OPC to indicate
-                                 whether it's ready to receive
-                                 peripheral command or not
+            opcReturn (int): Bytes returned by OPC to indicate
+                             whether it's ready to receive
+                             peripheral command or not
 
-            Returns:
-                Nothing, toggles the fan
+        Returns:
+            Nothing, toggles the fan
 
-            Adapted from Python2 code written by Daniel Jarvis and
-            licensed under GPL v3.0:
-            https://github.com/JarvisSan22/OPC-N3_python
+        Adapted from Python2 code written by Daniel Jarvis and
+        licensed under GPL v3.0:
+        https://github.com/JarvisSan22/OPC-N3_python
         """
         loopCount = 0
         if status:  # True if fan is on, false if not
@@ -206,7 +210,9 @@ class OPCN3:
             fanStatus = SPIBytes.fanOff
         while True:
             loopCount += 1
-            self.opc.write(bytearray([SPIBytes.adOPC,SPIBytes.pCommand]))  # 0x03 is command byte
+            self.opc.write(
+                bytearray([SPIBytes.adOPC, SPIBytes.pCommand])
+            )  # 0x03 is command byte
             opcReturn = self.opc.read(2)
             if opcReturn == (b"\xff\xf3" or b"xf3\xff"):
                 time.sleep(self.wait)
@@ -222,32 +228,32 @@ class OPCN3:
                 time.sleep(self.wait * 10)
 
     def laserPower(self, status):
-        """ Toggles OPC-N3 laser power status
+        """Toggles OPC-N3 laser power status
 
-            Keyword Arguments:
-                status (boolean): True if laser is to be turned on, false
-                                  if not
+        Keyword Arguments:
+            status (boolean): True if laser is to be turned on, false
+                              if not
 
-            Variables:
-                loopCount (int): How many attempts have been made. If
-                                 > 20, the SPI buffer is reset and
-                                 loopCount is reset to 0
+        Variables:
+            loopCount (int): How many attempts have been made. If
+                             > 20, the SPI buffer is reset and
+                             loopCount is reset to 0
 
-                laserStatus (int): The byte sent to the OPC to change
-                                   the power status of the laser.
-                                   laserOn is used to turn it on.
-                                   laserOff is used to turn it off.
+            laserStatus (int): The byte sent to the OPC to change
+                               the power status of the laser.
+                               laserOn is used to turn it on.
+                               laserOff is used to turn it off.
 
-                opcReturn (int): Bytes returned by OPC to indicate
-                                 whether it's ready to receive
-                                 peripheral command or not
+            opcReturn (int): Bytes returned by OPC to indicate
+                             whether it's ready to receive
+                             peripheral command or not
 
-            Returns:
-                Nothing, toggles the laser
+        Returns:
+            Nothing, toggles the laser
 
-            Adapted from Python2 code written by Daniel Jarvis and
-            licensed under GPL v3.0:
-            https://github.com/JarvisSan22/OPC-N3_python
+        Adapted from Python2 code written by Daniel Jarvis and
+        licensed under GPL v3.0:
+        https://github.com/JarvisSan22/OPC-N3_python
         """
         loopCount = 0
         if status:  # True if fan is on, false if not
@@ -256,7 +262,9 @@ class OPCN3:
             laserStatus = SPIBytes.laserOff
         while True:
             loopCount += 1
-            self.opc.write(bytearray([SPIBytes.adOPC, SPIBytes.pCommand]))  # 0x03 is command byte
+            self.opc.write(
+                bytearray([SPIBytes.adOPC, SPIBytes.pCommand])
+            )  # 0x03 is command byte
             opcReturn = self.opc.read(2)
             if opcReturn == (b"\xff\xf3" or b"\xf3\xff"):
                 time.sleep(self.wait)
@@ -272,43 +280,43 @@ class OPCN3:
                 time.sleep(self.wait * 10)
 
     def getData(self):
-        """ Requests histogram data from OPC-N3 and parses it
+        """Requests histogram data from OPC-N3 and parses it
 
-            Variables:
-                loopCount (int): How many attempts have been made. If
-                                 > 20, the SPI buffer is reset and
-                                 loopCount is reset to 0
+        Variables:
+            loopCount (int): How many attempts have been made. If
+                             > 20, the SPI buffer is reset and
+                             loopCount is reset to 0
 
-                opcReturn (int): Bytes returned by OPC to indicate
-                                 whether it's ready to receive
-                                 peripheral command or not
+            opcReturn (int): Bytes returned by OPC to indicate
+                             whether it's ready to receive
+                             peripheral command or not
 
-                opcHistBytesRaw (bytearray): Raw output of OPC-N3 when
-                                             asked for data. The
-                                             histogram data comprises
-                                             of 86 bytes but 0x61 is
-                                             also returned when each
-                                             'any value' byte is sent
-                                             so the byte array is 86*2
-                                             bytes long
+            opcHistBytesRaw (bytearray): Raw output of OPC-N3 when
+                                         asked for data. The
+                                         histogram data comprises
+                                         of 86 bytes but 0x61 is
+                                         also returned when each
+                                         'any value' byte is sent
+                                         so the byte array is 86*2
+                                         bytes long
 
-                opcHistBytes (list): opcHistBytesRaw with all useless
-                                     0x61 values removes (all odd
-                                     values removed)
+            opcHistBytes (list): opcHistBytesRaw with all useless
+                                 0x61 values removes (all odd
+                                 values removed)
 
-                opcHistData (dict): Parsed data output by OPC-N3.
-                                    Contains optional "Bin Data"
-                                    subdict which contains all
-                                    histogram data, only stored if
-                                    requested in the instrument config
+            opcHistData (dict): Parsed data output by OPC-N3.
+                                Contains optional "Bin Data"
+                                subdict which contains all
+                                histogram data, only stored if
+                                requested in the instrument config
 
-            Returns:
-                Nothing, stores data in latestData attribute if
-                successful, stores None in latestData if not
+        Returns:
+            Nothing, stores data in latestData attribute if
+            successful, stores None in latestData if not
 
-            Adapted from Python2 code written by Daniel Jarvis and
-            licensed under GPL v3.0:
-            https://github.com/JarvisSan22/OPC-N3_python
+        Adapted from Python2 code written by Daniel Jarvis and
+        licensed under GPL v3.0:
+        https://github.com/JarvisSan22/OPC-N3_python
         """
 
         loopCount = 0
@@ -328,34 +336,59 @@ class OPCN3:
                 # 86 bytes are expected. However, as the OPC also
                 # returns xff when it receives the 'any value' byte,
                 # the program reads 2 * 86 bytes
-                opcHistBytes = [histByte for index, histByte in
-                                enumerate(opcHistBytesRaw)
-                                if ((index + 1) % 2 == 0) ]
+                opcHistBytes = [
+                    histByte
+                    for index, histByte in enumerate(opcHistBytesRaw)
+                    if ((index + 1) % 2 == 0)
+                ]
                 if len(opcHistBytes) == 86:
                     opcHistData = {
-                        'MToF (us)': round(unpack('f',
-                            bytes(opcHistBytes[48:52]))[0] / 3, 3),
-                        'Period (s)': combine_bytes(opcHistBytes[52],
-                            opcHistBytes[53]) / 100,
-                        'Flowrate (ml/s)': combine_bytes(opcHistBytes[54],
-                            opcHistBytes[55]) / 100,
-                        'Temp (C)': round(convert_T(combine_bytes(
-                                    opcHistBytes[56], opcHistBytes[57])), 3),
-                        'RH (%)': round(convert_RH(combine_bytes(
-                                    opcHistBytes[58], opcHistBytes[59])), 3),
-                        'PM1 (ug/m-3)': round(unpack('f',
-                            bytes(opcHistBytes[60:64]))[0], 3),
-                        'PM2.5 (ug/m-3)': round(unpack('f',
-                            bytes(opcHistBytes[64:68]))[0], 3),
-                        'PM10 (ug/m-3)': round(unpack('f',
-                            bytes(opcHistBytes[68:72]))[0], 3),
+                        "MToF (us)": round(
+                            unpack("f", bytes(opcHistBytes[48:52]))[0] / 3, 3
+                        ),
+                        "Period (s)": combine_bytes(
+                            opcHistBytes[52], opcHistBytes[53]
+                        )
+                        / 100,
+                        "Flowrate (ml/s)": combine_bytes(
+                            opcHistBytes[54], opcHistBytes[55]
+                        )
+                        / 100,
+                        "Temp (C)": round(
+                            convert_T(
+                                combine_bytes(
+                                    opcHistBytes[56], opcHistBytes[57]
+                                )
+                            ),
+                            3,
+                        ),
+                        "RH (%)": round(
+                            convert_RH(
+                                combine_bytes(
+                                    opcHistBytes[58], opcHistBytes[59]
+                                )
+                            ),
+                            3,
+                        ),
+                        "PM1 (ug/m-3)": round(
+                            unpack("f", bytes(opcHistBytes[60:64]))[0], 3
+                        ),
+                        "PM2.5 (ug/m-3)": round(
+                            unpack("f", bytes(opcHistBytes[64:68]))[0], 3
+                        ),
+                        "PM10 (ug/m-3)": round(
+                            unpack("f", bytes(opcHistBytes[68:72]))[0], 3
+                        ),
                     }
                     if self.config["Use Bin Data"]:
                         opcHistData["Bin Data"] = dict()
                         for binNumber in range(0, 24):
-                            opcHistData["Bin Data"][f"Bin {binNumber + 1}"] = \
-                                combine_bytes(opcHistBytes[(binNumber * 2)],
-                                    opcHistBytes[(binNumber * 2) + 1])
+                            opcHistData["Bin Data"][
+                                f"Bin {binNumber + 1}"
+                            ] = combine_bytes(
+                                opcHistBytes[(binNumber * 2)],
+                                opcHistBytes[(binNumber * 2) + 1],
+                            )
                     self.latestData = opcHistData
                     break
                 elif loopCount > 20:
@@ -367,7 +400,7 @@ class OPCN3:
                     time.sleep(self.wait * 10)
 
     def formatData(self):
-        """ Formats data saved to latestData instance in to a format
+        """Formats data saved to latestData instance in to a format
         suitable for writing to a csv file.
 
         Formats headers and data in to formats suitable for writing to
@@ -406,8 +439,12 @@ class OPCN3:
                 and "Bin Data" are None
         """
         if self.latestData is None:
-            return {"Headers": None, "Data": None,
-                    "Bin Headers": None, "Bin Data": None}
+            return {
+                "Headers": None,
+                "Data": None,
+                "Bin Headers": None,
+                "Bin Data": None,
+            }
         if self.config["Use Bin Data"]:
             binKeys = list(self.latestData["Bin Data"].keys())
             binHeaders = ""
@@ -415,12 +452,14 @@ class OPCN3:
             for bIndex, binKey in enumerate(binKeys):
                 if bIndex == 0:
                     binHeaders = f"{binKey}"  # f string to avoid
-                                                 # unforseen behaviour
-                    binFormatted= f"{self.latestData['Bin Data'][binKey]}"
+                    # unforseen behaviour
+                    binFormatted = f"{self.latestData['Bin Data'][binKey]}"
                 else:
                     binHeaders = f"{binHeaders}, {binKey}"
-                    binFormatted= f"{binFormatted}," \
+                    binFormatted = (
+                        f"{binFormatted},"
                         f"{self.latestData['Bin Data'][binKey]}"
+                    )
             self.latestData.pop("Bin Data", None)
         dataKeys = list(self.latestData.keys())
         dataHeaders = ""
@@ -433,36 +472,44 @@ class OPCN3:
                 dataHeaders = f"{dataHeaders}, {dataKey}"
                 dataFormatted = f"{dataFormatted}, {self.latestData[dataKey]}"
         if self.config["Use Bin Data"]:
-            return {"Headers": dataHeaders, "Data": dataFormatted,
-                    "Bin Headers": binHeaders, "Bin Data": binFormatted}
+            return {
+                "Headers": dataHeaders,
+                "Data": dataFormatted,
+                "Bin Headers": binHeaders,
+                "Bin Data": binFormatted,
+            }
         else:
-            return {"Headers": dataHeaders, "Data": dataFormatted,
-                    "Bin Headers": None, "Bin Data": None}
+            return {
+                "Headers": dataHeaders,
+                "Data": dataFormatted,
+                "Bin Headers": None,
+                "Bin Data": None,
+            }
 
     def printOutput(self):
-        """ Returns data stored in latestData in a format to be printed
+        """Returns data stored in latestData in a format to be printed
 
-            Keyword Arguments:
-                None
+        Keyword Arguments:
+            None
 
-            Returns:
-                If latestData contains measurements, returns a
-                formatted string to be printed to the console. If
-                latestData doesn't, a string of hashes is returned
-                instead
+        Returns:
+            If latestData contains measurements, returns a
+            formatted string to be printed to the console. If
+            latestData doesn't, a string of hashes is returned
+            instead
         """
         if self.latestData is not None:
-            return f"PM1: {str(self.latestData['PM1 (ug/m-3)']).ljust(7)}| " \
-                f"PM2.5: {str(self.latestData['PM2.5 (ug/m-3)']).ljust(7)}| " \
+            return (
+                f"PM1: {str(self.latestData['PM1 (ug/m-3)']).ljust(7)}| "
+                f"PM2.5: {str(self.latestData['PM2.5 (ug/m-3)']).ljust(7)}| "
                 f"PM10: {str(self.latestData['PM10 (ug/m-3)']).ljust(7)}"
+            )
         else:
             return "#" * 38
 
 
-
-
 def convert_RH(rawRH):
-    """ Converts raw RH output of OPCN3 to a real value
+    """Converts raw RH output of OPCN3 to a real value
 
     The equation used is quoted in Alphasense Document 072-0503:
     Supplemental SPI information for the OPC-N3 (Issue 3).
@@ -479,8 +526,9 @@ def convert_RH(rawRH):
     """
     return 100 * (rawRH / ((2 ** 16) - 1))
 
+
 def convert_T(rawT):
-    """ Converts raw T output of OPCN3 to a real value.
+    """Converts raw T output of OPCN3 to a real value.
 
     The equation used is quoted in Alphasense Document 072-0503:
     Supplemental SPI information for the OPC-N3 (Issue 3).
@@ -497,8 +545,9 @@ def convert_T(rawT):
     """
     return -45 + (175 * (rawT / ((2 ** 16) - 1)))
 
+
 def combine_bytes(LSB, MSB):
-    """ Combines Least Significant Byte and Most Significant Byte in to
+    """Combines Least Significant Byte and Most Significant Byte in to
     a 16 bit integer.
 
     Keyword Arguments:
