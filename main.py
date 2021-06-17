@@ -16,12 +16,12 @@ filepath. If this file doesn't exist, it is made.
         None
 
     Parameters:
-        timeDifference (int): Time in seconds between measurements
+        time_difference (int): Time in seconds between measurements
 
-        fancyPrintCharacter (char): Single character that's used for
+        fancy_print_character (char): Single character that's used for
                                       the fancy_print function
 
-        opcConfig (dict): Config options parsed from OPCSettings.json
+        opc_config (dict): Config options parsed from OPCSettings.json
                           Contains the following keys:
                             "Name" (str): Name of the Sensor
                             "Port" (str): Path to the SPI interface
@@ -31,7 +31,7 @@ filepath. If this file doesn't exist, it is made.
                                                for fan (currently
                                                unused)
 
-        serialConfig (dict): Config options for serial device. Should
+        serial_config (dict): Config options for serial device. Should
                              not need altering for the OPC-N3
 
         opc (OPC-N3 Class): Class object representing an instance of
@@ -40,7 +40,7 @@ filepath. If this file doesn't exist, it is made.
         firstMeasurementTime (datetime): When the first measurement
                                          will take place
 
-        startTime (float): When the measurement starts, expressed in
+        start_time (float): When the measurement starts, expressed in
                            seconds since epoch and calculated with
                            time.time()
 
@@ -57,14 +57,14 @@ filepath. If this file doesn't exist, it is made.
                    the bin values
 """
 
-__author__ = "Joe Hayward"
+__author__ = "Idris Hayward"
 __copyright__ = (
     "2020, Global Centre for Clean Air Research, " "The University of Surrey"
 )
-__credits__ = ["Joe Hayward"]
+__credits__ = ["Idris Hayward"]
 __license__ = "GNU General Public License v3.0"
 __version__ = "2021.1.14.1318"
-__maintainer__ = "Joe Hayward"
+__maintainer__ = "Idris Hayward"
 __email__ = "j.d.hayward@surrey.ac.uk"
 __status__ = "Beta"
 
@@ -79,7 +79,7 @@ import serial
 
 from peripherals.OPCN3 import OPCN3 as OPC
 
-fancyPrintCharacter = "\U0001F533"
+fancy_print_character = "\U0001F533"
 
 
 def fancy_print(str_to_print, length=70, form="NORM", char="#"):
@@ -185,18 +185,18 @@ def find_valid_path():
                 f"{len(media_dirs)} external devices found in "
                 f"/media/{getpass.getuser()}/. Unmount "
                 f"{len(media_dirs) - 1} devices or give file path",
-                char=fancyPrintCharacter,
+                char=fancy_print_character,
             )
         else:
             fancy_print(
                 f"No external devices found in /media/"
                 f"{getpass.getuser()}/",
-                char=fancyPrintCharacter,
+                char=fancy_print_character,
             )
     except FileNotFoundError:
         fancy_print(
             f"No external devices found in /media/{getpass.getuser()}/",
-            char=fancyPrintCharacter,
+            char=fancy_print_character,
         )
     try:
         mnt_dirs = [f.path for f in os.scandir("/mnt") if f.is_dir()]
@@ -206,15 +206,15 @@ def find_valid_path():
             fancy_print(
                 f"{len(mnt_dirs)} found in /mnt/."
                 f" Unmount {len(mnt_dirs) - 1} devices or give file path",
-                char=fancyPrintCharacter,
+                char=fancy_print_character,
             )
         else:
             fancy_print(
-                f"No external devices found in /mnt/", char=fancyPrintCharacter
+                f"No external devices found in /mnt/", char=fancy_print_character
             )
     except FileNotFoundError:
         fancy_print(
-            f"No external devices found in /mnt/", char=fancyPrintCharacter
+            f"No external devices found in /mnt/", char=fancy_print_character
         )
     return os.path.expanduser("~/Documents/OPC Data/")
 
@@ -435,22 +435,22 @@ def bin_Nones():
 
 if __name__ == "__main__":
     # PROGRAM INIT
-    fancy_print("", form="LINE", char=fancyPrintCharacter)
+    fancy_print("", form="LINE", char=fancy_print_character)
     fancy_print(
-        "GCARE OPC-N3 Python Script", form="TITLE", char=fancyPrintCharacter
+        "GCARE OPC-N3 Python Script", form="TITLE", char=fancy_print_character
     )
-    fancy_print(f"Author:  {__author__}", char=fancyPrintCharacter)
-    fancy_print(f"Contact: {__email__}", char=fancyPrintCharacter)
-    fancy_print(f"Version: {__version__}", char=fancyPrintCharacter)
-    fancy_print(f"Status:  {__status__}", char=fancyPrintCharacter)
-    fancy_print(f"License: {__license__}", char=fancyPrintCharacter)
-    fancy_print("", form="LINE", char=fancyPrintCharacter)
+    fancy_print(f"Author:  {__author__}", char=fancy_print_character)
+    fancy_print(f"Contact: {__email__}", char=fancy_print_character)
+    fancy_print(f"Version: {__version__}", char=fancy_print_character)
+    fancy_print(f"Status:  {__status__}", char=fancy_print_character)
+    fancy_print(f"License: {__license__}", char=fancy_print_character)
+    fancy_print("", form="LINE", char=fancy_print_character)
 
     # LOAD OPC SETTINGS
-    with open("OPCSettings.json", "r") as opcConfigJson:
-        opcConfig = json.load(opcConfigJson)
-    serialConfig = {
-        "port": opcConfig["Port"],
+    with open("OPCSettings.json", "r") as opc_config_json:
+        opc_config = json.load(opc_config_json)
+    serial_config = {
+        "port": opc_config["Port"],
         "baudrate": 9600,
         "parity": serial.PARITY_NONE,
         "bytesize": serial.EIGHTBITS,
@@ -458,87 +458,87 @@ if __name__ == "__main__":
         "xonxoff": False,
         "timeout": 1,
     }
-    timeDifference = opcConfig["Measurement Time"]
-    if opcConfig["File Path"] == "":
-        opcConfig["File Path"] = find_valid_path()
-    if not os.path.isdir(opcConfig["File Path"]):
-        os.makedirs(opcConfig["File Path"])
+    time_difference = opc_config["Measurement Time"]
+    if opc_config["File Path"] == "":
+        opc_config["File Path"] = find_valid_path()
+    if not os.path.isdir(opc_config["File Path"]):
+        os.makedirs(opc_config["File Path"])
     fancy_print(
-        f'- Saving data to{opcConfig["File Path"]}', char=fancyPrintCharacter
+        f'- Saving data to{opc_config["File Path"]}', char=fancy_print_character
     )
-    fancy_print("", form="LINE", char=fancyPrintCharacter)
-    fancy_print("Connecting to OPC-N3", char=fancyPrintCharacter)
+    fancy_print("", form="LINE", char=fancy_print_character)
+    fancy_print("Connecting to OPC-N3", char=fancy_print_character)
 
     # Initialise the OPC
     time.sleep(2)  # The OPC needs to boot
-    opc = OPC(serialConfig, opcConfig)
+    opc = OPC(serial_config, opc_config)
     opc.initConnection()
-    fancy_print("- Connection Made", char=fancyPrintCharacter)
-    fancy_print("", form="LINE", char=fancyPrintCharacter)
+    fancy_print("- Connection Made", char=fancy_print_character)
+    fancy_print("", form="LINE", char=fancy_print_character)
 
     # Test the connection
-    fancy_print("Testing Connection", char=fancyPrintCharacter)
-    fancy_print("- Disabling Fan", char=fancyPrintCharacter)
+    fancy_print("Testing Connection", char=fancy_print_character)
+    fancy_print("- Disabling Fan", char=fancy_print_character)
     opc.fanPower(False)
-    fancy_print("- Enabling Fan", char=fancyPrintCharacter)
+    fancy_print("- Enabling Fan", char=fancy_print_character)
     opc.fanPower(True)
-    fancy_print("- Disabling Laser", char=fancyPrintCharacter)
+    fancy_print("- Disabling Laser", char=fancy_print_character)
     opc.laserPower(False)
-    fancy_print("- Enabling Laser", char=fancyPrintCharacter)
+    fancy_print("- Enabling Laser", char=fancy_print_character)
     opc.laserPower(True)
-    fancy_print("", form="LINE", char=fancyPrintCharacter)
+    fancy_print("", form="LINE", char=fancy_print_character)
 
     # Record data
-    fancy_print(f"Recording measurements", char=fancyPrintCharacter)
+    fancy_print(f"Recording measurements", char=fancy_print_character)
     fancy_print(
         f"- Exit via CTRL-C or by closing the terminal",
-        char=fancyPrintCharacter,
+        char=fancy_print_character,
     )
     fancy_print(
         f'-- Do not exit if "Storing Data" is displayed',
-        char=fancyPrintCharacter,
+        char=fancy_print_character,
     )
     fancy_print(
         f"-- This could corrupt the file being written to",
-        char=fancyPrintCharacter,
+        char=fancy_print_character,
     )
-    fancy_print("", form="LINE", char=fancyPrintCharacter)
-    nextMeasurementTime = first_measurement_time(
-        timeDifference, dt.datetime.now()
+    fancy_print("", form="LINE", char=fancy_print_character)
+    next_measurement_time = first_measurement_time(
+        time_difference, dt.datetime.now()
     )
     fancy_print(
         f'Current time is {dt.datetime.now().strftime("%H:%M:%S")}',
-        char=fancyPrintCharacter,
+        char=fancy_print_character,
     )
     fancy_print(
         f"- Next measurement will be at "
-        f'{nextMeasurementTime.strftime("%H:%M:%S")}',
-        char=fancyPrintCharacter,
+        f'{next_measurement_time.strftime("%H:%M:%S")}',
+        char=fancy_print_character,
     )
-    fancy_print("", form="LINE", char=fancyPrintCharacter)
+    fancy_print("", form="LINE", char=fancy_print_character)
     print()
-    time.sleep((nextMeasurementTime - dt.datetime.now()).seconds + 1)
+    time.sleep((next_measurement_time - dt.datetime.now()).seconds + 1)
     # 1 second added on otherwise it would start on the 59th second of
     # the previous minute, the joys of timedelta calculations
     while True:
-        startTime = dt.datetime.now()
+        start_time = dt.datetime.now()
         print("Measuring data".ljust(70), end="\r", flush=True)
         opc.getData()
         print("Storing Data".ljust(70), end="\r", flush=True)
         save_to_file(
-            opc.formatData(), dt.datetime.now(), opcConfig["File Path"]
+            opc.formatData(), dt.datetime.now(), opc_config["File Path"]
         )
-        nextMeasurementTime = next_measurement_time(timeDifference, startTime)
+        next_measurement_time = next_measurement_time(time_difference, start_time)
         print(
             f"{opc.printOutput()} | Next Measurement: "
-            f'{nextMeasurementTime.strftime("%H:%M:%S")}'.ljust(70),
+            f'{next_measurement_time.strftime("%H:%M:%S")}'.ljust(70),
             end="\r",
             flush=True,
         )
-        timeToNextMeasurement = nextMeasurementTime - dt.datetime.now()
+        time_to_next_measurement = next_measurement_time - dt.datetime.now()
         time.sleep(
-            (timeToNextMeasurement.microseconds) * 1e-6
-            + timeToNextMeasurement.seconds
+            (time_to_next_measurement.microseconds) * 1e-6
+            + time_to_next_measurement.seconds
         )
 
         # 1 second added on otherwise it would start on the 59th second of

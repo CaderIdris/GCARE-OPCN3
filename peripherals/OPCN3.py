@@ -26,14 +26,14 @@ https://github.com/JarvisSan22/OPC-N3_python
 Functions adapted from this code is marked in the docstrings.
 """
 
-__author__ = "Joe Hayward"
+__author__ = "Idris Hayward"
 __copyright__ = (
     "2020, Global Centre for Clean Air Research, " "The University of Surrey"
 )
-__credits__ = ["Joe Hayward"]
+__credits__ = ["Idris Hayward"]
 __license__ = "GNU General Public License v3.0"
 __version__ = "2021.1.12.1822"
-__maintainer__ = "Joe Hayward"
+__maintainer__ = "Idris Hayward"
 __email__ = "j.d.hayward@surrey.ac.uk"
 __status__ = "Alpha"
 
