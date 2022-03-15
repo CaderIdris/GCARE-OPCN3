@@ -65,6 +65,7 @@ The sixth block indicates the time the measurement program started and when the 
 While measuring, the program displays the latest measurement at the bottom of the terminal.
 
 ![Measurement Output](Images/SOP/03%20-%20Output.png)
+
 ---
 
 ## Settings
@@ -148,8 +149,6 @@ __usb-permissions.sh__ was created in a response to the program not having the c
 ## API
 
 ### [main.py](./main.py)
-
-### [OPCN3.py](./peripherals/OPCN3.py)
 
 #### Functions
 
@@ -262,6 +261,22 @@ None
 ###### Returns
 
 A row of 24 None values in csv format
+
+### [OPCN3.py](./peripherals/OPCN3.py)
+
+#### Classes
+
+##### OPCN3
+
+###### Keyword Arguments
+
+###### Attributes
+
+###### Methods
+
+**method**
+
+- Keyword Arguments
 
 ## Components
 
