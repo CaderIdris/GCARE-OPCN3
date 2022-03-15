@@ -147,7 +147,51 @@ __usb-permissions.sh__ was created in a response to the program not having the c
 
 ## API
 
->To be added
+### [main.py](./main.py)
+
+### [OPCN3.py](./peripherals/OPCN3.py)
+
+#### Functions
+
+##### fancy_print
+
+Makes a nicer output to the console
+
+###### Keyword Arguments
+
+| Argument | Type | Usage | Required? | Default |
+|---|---|---|---|---|
+|*str_to_print*|`str`|String that gets printed to console|Y|None|
+|*length*|`int`|Character length of output|N|70|
+|*form*|`str`|Output type (listed below)|N|NORM|
+|*char*|`str`|Character used as border, should only be 1 character|N|\U0001F533 (White box emoji)|
+|*end*|`str`|Appended to end of string, generally should be `\n` unless output is to be overwritten, then use `\r`|N|\r|
+|*flush*|`bool`|Flush the output stream?|N|False|
+
+**Valid options for _form_**
+| Option | Description |
+|---|---|
+|TITLE|Centres the string, one char at start and end|
+|NORM|Left aligned string, one char at start and end|
+|LINE|Prints a line of *char* of specified *length*|
+
+##### find_valid_path
+
+##### first_measurement_time
+
+##### next_measurement_time
+
+##### save_to_file
+
+##### bin_Nones
+
+Returns blank measurements for the bin columns if bin data was previously measured but is no longer
+
+###### Keyword Arguments
+
+###### Returns
+
+A row of 24 None values in csv format
 
 ## Components
 
