@@ -177,17 +177,87 @@ Makes a nicer output to the console
 
 ##### find_valid_path
 
+Searches the /media/ and /mnt/ directories to find a device to save data to. If either zero or more than one devices are present in /media/, /mnt/ is searched. If the same is true of /mnt/, the path used is ~/Documents/OPC Data/
+
+##### Keyword Arguments
+
+None
+
+##### Returns
+
+If 1 directory present in /media/, returns path to that directory plus "/OPC Data/"
+Else if 1 direction present in /mnt/, returns path to that directory plus "OPC Data/"
+else returns "~/Documents/OPC Data/"
+
 ##### first_measurement_time
+
+Calculates when the first measurement should take place
+
+###### Keyword Arguments
+
+| Argument | Type | Usage | Required? | Default |
+|---|---|---|---|---|
+| *timeInterval* | `str` | Dictates the time interval between measurements. Options below | Y | "1m" |
+| *currentTime* | `datetime` | The current time | Y | None |
+
+**Options for timeInterval**
+|Argument|Interval|
+|---|---|
+|1m|1 minute|
+|5m|5 minutes|
+|10m|10 minutes|
+|15m|15 minutes|
+|30m|30 minutes|
+|1h|1 hours|
+
+##### Returns
+
+`timedelta` object representing the amount of time until the first measurement
 
 ##### next_measurement_time
 
+Calculates when the next measurement should take place
+
+###### Keyword Arguments
+
+| Argument | Type | Usage | Required? | Default |
+|---|---|---|---|---|
+| *timeInterval* | `str` | Dictates the time interval between measurements. Options below | Y | "1m" |
+| *currentTime* | `datetime` | The time the last measurement took place | Y | None |
+
+**Options for timeInterval**
+|Argument|Interval|
+|---|---|
+|1m|1 minute|
+|5m|5 minutes|
+|10m|10 minutes|
+|15m|15 minutes|
+|30m|30 minutes|
+|1h|1 hours|
+
+###### Returns
+
+`timedelta` object representing the amount of time until the next measurement
+
 ##### save_to_file
+
+Appends recorded data to daily measurement file in OPC directory, creating a file with appropriate headers if one doesn't exist.
+
+###### Keyword Arguments
+
+|Argument|Type|Usage|Required?|Default|
+|---|---|---|---|---|
+|opcData|`dict`|Measurements made by the OPC and headers for csv. Split into four keys. "Headers", "Data", "Bin Headers", "Bin Data"|Y|None|
+|timestamp|`datetime`|When the measurement was made|Y|None|
+|filePath|`str`|Path to save file to|Y|None|
 
 ##### bin_Nones
 
-Returns blank measurements for the bin columns if bin data was previously measured but is no longer
+Returns blank measurements for the bin columns if bin data was previously measured but is no longer.
 
 ###### Keyword Arguments
+
+None
 
 ###### Returns
 
