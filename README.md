@@ -164,8 +164,6 @@ Makes a nicer output to the console
 |*length*|`int`|Character length of output|N|70|
 |*form*|`str`|Output type (listed below)|N|NORM|
 |*char*|`str`|Character used as border, should only be 1 character|N|\U0001F533 (White box emoji)|
-|*end*|`str`|Appended to end of string, generally should be `\n` unless output is to be overwritten, then use `\r`|N|\r|
-|*flush*|`bool`|Flush the output stream?|N|False|
 
 **Valid options for _form_**
 | Option | Description |
@@ -266,17 +264,164 @@ A row of 24 None values in csv format
 
 #### Classes
 
-##### OPCN3
+Used to communicate with Alphasense OPC-N3 via USB-SPI connection.
 
-###### Keyword Arguments
+##### SPIBytes
+
+Dataclass containing ytecodes that command the OPC to perform various functions
 
 ###### Attributes
 
+| Attribute | Type | Description | Value |
+| adUSBAdapter | `int` | Address for the USB adapter | 0x5A |
+| adOPC | `int` | Address for the OPC-N3 | 0x61 |
+| pCommand | `int ` | Control byte for OPC-N3 peripheral | 0x03 |
+| fanOff | `int` | Disables fan | 0x02 |
+| fanOn | `int` | Enables fan | 0x03 |
+| laserOff | `int` | Disables laser | 0x06 |
+| laserOn | `int` | Enables laser | 0x07 |
+| reqHist | `int` | Requests histogram data | 0x30 |
+| reqData | `int` | Requests PM data and resets histogram | 0x32 |
+
+
+##### OPCN3
+
+Class representing the OPC-N3
+
+###### Keyword Arguments
+
+| Argument | Type | Usage | Required? | Default |
+|---|---|---|---|---|
+|*serialConfig*|`dict`|Contains all necessary info for pySerial3 to make a connection | Y | None |
+|*deviceConfig*|`dict`|User generated config file indicating operating parameters of the instrument | Y | None |
+
+###### Attributes
+
+| Attribute | Type | Description |
+|---|---|---|
+|*opc*|`serial object`|Serial connection to OPC-N3|
+|*wait*|`float`|Time to wait between messages|
+|*isFanOn*|`bool`|Is the fan on?|
+|*isLaserOn*|`bool`|Is the laser on?|
+|*config*|`dict`|User generated config file indicating operating parameters of the instrument|
+|*latestData*|`dict`|Data output by OPC-N3. Defaults to None if OPC does not send data or data is not in expected format|
+
 ###### Methods
 
-**method**
+**initConnection**
+
+Initialises connection with OPC-N3
 
 - Keyword Arguments
+
+None
+
+**fanPower**
+
+Toggles OPC-N3 fan power status
+
+- Keyword Arguments:
+
+|Argument|Type|Usage|Required?|Default|
+|---|---|---|---|---|
+|*status*|`bool`|True to enable fan, False to disable|Y|None|
+
+**laserPower**
+
+Toggles OPC-N3 fan power status
+
+- Keyword Arguments:
+
+|Argument|Type|Usage|Required?|Default|
+|---|---|---|---|---|
+|*status*|`bool`|True to enable fan, False to disable|Y|None|
+
+**getData**
+
+Request histogram data from OPC-N3
+
+- Keyword Arguments:
+
+None
+
+- Returns:
+
+None, but stores measurements in latestData attribute
+
+**formatData**
+
+Formats data saved to latestData attribute into csv format
+
+- Keyword Arguments:
+
+None
+
+- Returns:
+
+`dict` with 4 keys: 
+- "Headers": Headers for non bin measurements
+- "Data": Non bin measurements
+- "Bin Headers": Headers for bin measurements
+- "Bin Data": Bin measurements
+
+If no measurements are made, all are None. If bin measurements aren't made, "Bin Headers" and "Bin Data" is None
+
+**printOutput**
+
+Returns data stored in latestData in a format to be printed to the terminal
+
+- Keyword Arguments:
+
+None
+
+- Returns:
+
+Formatted `str` containing measurement data
+
+#### Methods
+
+##### convert_RH
+
+Converts raw RH output of OPCN3 to `float` value
+
+###### Keyword Arguments
+
+|Argument|Type|Usage|Required?|Default|
+|---|---|---|---|---|
+|rawRH|`int`|Raw RH measurement from OPC-N3|Y|None|
+
+###### Returns
+
+Converted RH measurement
+
+##### convert_T
+
+Converts raw T output of OPCN3 to `float` value
+
+###### Keyword Arguments
+
+|Argument|Type|Usage|Required?|Default|
+|---|---|---|---|---|
+|rawT|`int`|Raw RH measurement from OPC-N3|Y|None|
+
+###### Returns
+
+Converted T measurement
+
+##### combine_bytes
+
+Combines Least Significant Byte and Most Significant Byte in to a 16 bit integer
+
+###### Keyword Arguments
+
+|Argument|Type|Usage|Required?|Default|
+|---|---|---|---|---|
+|LSB|`int`|Least significant byte|Y|None|
+|MSB|`int`|Most significant byte|Y|None|
+
+###### Returns
+
+16 bit `int` representing a combination of LSB and MSB
 
 ## Components
 
