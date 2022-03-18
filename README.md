@@ -70,7 +70,24 @@ While measuring, the program displays the latest measurement at the bottom of th
 
 ## Settings
 
->To be added
+| Key | Type | Description | Options |
+|---|---|---|---|
+|Name|`str`|Name of the device|Any `str`|
+|Port|`str`|Path to the device|Path to the OPC-N3 USB adapter in the /dev/ directory|
+|Measurement Time|`str`|Measurement frequency|Options below|
+|Use Bin Data|`bool`|Record bin data|true/false|
+|Fan Speed|`int`|Unused|`int` between 0-128|
+|File Path|`str`|Path to save data to|Any valid path, leave empty to automatically select path with *find_valid_path*|
+
+**Options for Measurement Time**
+|Argument|Interval|
+|---|---|
+|1m|1 minute|
+|5m|5 minutes|
+|10m|10 minutes|
+|15m|15 minutes|
+|30m|30 minutes|
+|1h|1 hours|
 
 ---
 
