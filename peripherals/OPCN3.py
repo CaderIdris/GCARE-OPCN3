@@ -32,10 +32,10 @@ __copyright__ = (
 )
 __credits__ = ["Idris Hayward"]
 __license__ = "GNU General Public License v3.0"
-__version__ = "2021.1.12.1822"
+__version__ = "1.0"
 __maintainer__ = "Idris Hayward"
-__email__ = "j.d.hayward@surrey.ac.uk"
-__status__ = "Alpha"
+__email__ = "CaderIdrisGH@outlook.com"
+__status__ = "Stable Release"
 
 from dataclasses import dataclass
 from struct import unpack
