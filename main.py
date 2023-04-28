@@ -503,7 +503,7 @@ if __name__ == "__main__":
         char=fancy_print_character,
     )
     fancy_print("", form="LINE", char=fancy_print_character)
-    next_measurement_time = first_measurement_time(
+    n_measurement_time = first_measurement_time(
         time_difference, dt.datetime.now()
     )
     fancy_print(
@@ -517,7 +517,7 @@ if __name__ == "__main__":
     )
     fancy_print("", form="LINE", char=fancy_print_character)
     print()
-    time.sleep((next_measurement_time - dt.datetime.now()).seconds + 1)
+    time.sleep((n_measurement_time - dt.datetime.now()).seconds + 1)
     # 1 second added on otherwise it would start on the 59th second of
     # the previous minute, the joys of timedelta calculations
     while True:
@@ -528,14 +528,14 @@ if __name__ == "__main__":
         save_to_file(
             opc.formatData(), dt.datetime.now(), opc_config["File Path"]
         )
-        next_measurement_time = next_measurement_time(time_difference, start_time)
+        n_measurement_time = next_measurement_time(time_difference, start_time)
         print(
             f"{opc.printOutput()} | Next Measurement: "
             f'{next_measurement_time.strftime("%H:%M:%S")}'.ljust(70),
             end="\r",
             flush=True,
         )
-        time_to_next_measurement = next_measurement_time - dt.datetime.now()
+        time_to_next_measurement = n_measurement_time - dt.datetime.now()
         time.sleep(
             (time_to_next_measurement.microseconds) * 1e-6
             + time_to_next_measurement.seconds
