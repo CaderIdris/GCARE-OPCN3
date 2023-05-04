@@ -512,7 +512,7 @@ if __name__ == "__main__":
     )
     fancy_print(
         f"- Next measurement will be at "
-        f'{next_measurement_time.strftime("%H:%M:%S")}',
+        f'{n_measurement_time.strftime("%H:%M:%S")}',
         char=fancy_print_character,
     )
     fancy_print("", form="LINE", char=fancy_print_character)
@@ -531,7 +531,7 @@ if __name__ == "__main__":
         n_measurement_time = next_measurement_time(time_difference, start_time)
         print(
             f"{opc.printOutput()} | Next Measurement: "
-            f'{next_measurement_time.strftime("%H:%M:%S")}'.ljust(70),
+            f'{n_measurement_time.strftime("%H:%M:%S")}'.ljust(70),
             end="\r",
             flush=True,
         )
